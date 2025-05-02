@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>All Faculty</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="/static/scripts.js" defer></script>
+</head>
+<body class="system-admin-page">
+
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="homeButton">
+      <button onclick="location.href='/home'">Home</button>
+    </div>
+    <button onclick="window.location.href='{{ request.referrer }}'" class="back-button">← Back</button>
+    <div class="dropdown">
+      <button onclick="toggleDropdown()">Account</button>
+      <div class="dropdown-content">
+        <a href="/editInfo">Edit Personal Info</a>
+        <a href="/logout">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="form-container">
+    <h1>All Faculty</h1>
+    
+
+    <form method="GET" action="{{ url_for('admin_view_faculty') }}" class="search-form">
+      <input type="text" name="search" placeholder="Search by name or ID" value="{{ search_term if search_term }}">
+      <button type="submit" class="primary-button">Search</button>
+    </form>
+
+    {% if faculty %}
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th>Faculty ID</th>
+            <th>Name</th>
+            <th>Department</th>
+            <th>Email</th>
+            <th>Edit User</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for prof in faculty %}
+          <tr>
+            <td>{{ prof.uid }}</td>
+            <td>{{ prof.last_name }}, {{ prof.first_name }}</td>
+            <td>{{ prof.department }}</td>
+            <td>{{ prof.email }}</td>
+            <td><a href="{{ url_for('editUser', uid=prof.uid) }}" class="action-button edit">Edit</a>
+                <form action="{{ url_for('deleteUser', uid=prof.uid) }}" method="POST" onsubmit="return confirm('Delete user {{ prof.uid }}?');">
+                    <button type="submit" class="action-button delete">Delete</button>
+                  </form></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No faculty found.</p>
+    {% endif %}
+  </main>
+</body>
+</html>

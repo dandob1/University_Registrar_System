@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Decision Entry</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f0f4f8;
+            font-family: 'Poppins', sans-serif;
+            color: #2c3e50;
+        }
+        .info-item {
+            margin-bottom: 10px;
+        }
+        .info-label {
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        .letter-content {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Times New Roman', Times, serif;
+            line-height: 1.6;
+            border: 1px solid #ddd;
+        }
+        .btn-primary {
+            background-color: #1f3f5b;
+            border-color: #1f3f5b;
+        }
+        .btn-outline-danger {
+            border-color: #dc3545;
+            color: #dc3545;
+        }
+        .btn-outline-danger:hover {
+            background-color: #dc3545;
+            color: white;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            background-color: #ffffff;
+        }
+        .card-header {
+            background-color: #e9ecef;
+            border-bottom: none;
+            font-weight: 600;
+        }
+        .accordion-button {
+            font-weight: 600;
+        }
+        .accordion-button:not(.collapsed) {
+            background-color: #d6e4f0;
+            color: #1f3f5b;
+        }
+        .badge {
+            font-size: 0.85rem;
+        }
+        .progress-bar {
+            font-weight: 600;
+        }
+        .alert-info, .alert-warning, .alert-success {
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container py-4">
+        <!-- Top Navigation -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <a href="{{ url_for('faculty_dashboard') }}" class="btn btn-primary">Back</a>
+            <h2 class="mb-0">Final Decision Entry</h2>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
+        </div>
+
+        <!-- Application Details -->
+        <div class="card mb-5">
+            <div class="card-header">
+                <h4 class="mb-0">Application Details for {{ applicant.name }}</h4>
+            </div>
+            <div class="card-body">
+
+                <!-- Basic Information -->
+                <div class="card mb-4">
+                    <div class="card-header">Basic Information</div>
+                    <div class="card-body row">
+                        <div class="col-md-6">
+                            <div class="info-item"><span class="info-label">Name:</span> {{ applicant.name }}</div>
+                            <div class="info-item"><span class="info-label">Student Number:</span> {{ applicant.uid }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item"><span class="info-label">Semester & Year:</span> {{ applicant.semester }} {{ applicant.year }}</div>
+                            <div class="info-item"><span class="info-label">Degree Sought:</span> {{ applicant.degree_sought }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GRE Scores -->
+                <div class="card mb-4">
+                    <div class="card-header">GRE Scores</div>
+                    <div class="card-body row">
+                        <div class="col-md-3"><span class="info-label">Verbal:</span> {{ applicant.gre_verbal or 'N/A' }}</div>
+                        <div class="col-md-3"><span class="info-label">Quantitative:</span> {{ applicant.gre_quant or 'N/A' }}</div>
+                        <div class="col-md-3"><span class="info-label">Total:</span> {{ (applicant.gre_verbal|int + applicant.gre_quant|int) if applicant.gre_verbal and applicant.gre_quant else 'N/A' }}</div>
+                        <div class="col-md-3"><span class="info-label">Year Taken:</span> {{ applicant.gre_year or 'N/A' }}</div>
+                    </div>
+                </div>
+
+                <!-- Prior Degrees -->
+                <div class="card mb-4">
+                    <div class="card-header">Prior Degrees</div>
+                    <div class="card-body">
+                        {% if prior_degrees %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead><tr><th>Degree</th><th>GPA</th><th>University</th><th>Year</th></tr></thead>
+                                <tbody>
+                                    {% for degree in prior_degrees %}
+                                    <tr>
+                                        <td>{{ degree.degree_type }}</td>
+                                        <td>{{ degree.gpa }}</td>
+                                        <td>{{ degree.university }}</td>
+                                        <td>{{ degree.year }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-muted">No prior degrees available.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Additional Info -->
+                <div class="card mb-4">
+                    <div class="card-header">Additional Information</div>
+                    <div class="card-body row">
+                        <div class="col-md-6"><strong>Areas of Interest:</strong> {{ applicant.areas_of_interest or 'N/A' }}</div>
+                        <div class="col-md-6"><strong>Work Experience:</strong> {{ applicant.work_experience or 'N/A' }}</div>
+                    </div>
+                </div>
+
+                <!-- inside the card-body -->
+<!-- Recommendation Letters Section -->
+<div class="mb-4">
+    <h5 class="mb-3">Recommendation Letters</h5>
+    {% if recommendation_letters %}
+    <div class="accordion" id="recommendationLettersAccordion">
+        {% for letter in recommendation_letters %}
+        <div class="accordion-item mb-2">
+            <h2 class="accordion-header" id="heading{{ letter.id }}">
+                <button class="accordion-button {% if not letter.is_submitted %}collapsed{% endif %}" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#collapse{{ letter.id }}"
+                    aria-expanded="{% if letter.is_submitted %}true{% else %}false{% endif %}"
+                    aria-controls="collapse{{ letter.id }}">
+                    {{ letter.writer_name }}
+                    {% if letter.writer_title and letter.institution_name %}
+                    <span class="text-muted ms-2 small">({{ letter.writer_title }}, {{ letter.institution_name }})</span>
+                    {% endif %}
+                </button>
+            </h2>
+            <div id="collapse{{ letter.id }}" class="accordion-collapse collapse {% if letter.is_submitted %}show{% endif %}"
+                aria-labelledby="heading{{ letter.id }}" data-bs-parent="#recommendationLettersAccordion">
+                <div class="accordion-body">
+                    {% if letter.is_submitted %}
+                    <div class="mb-3">
+                        <strong>Letter Content:</strong>
+                        <div class="letter-content">{{ letter.letter_content | safe }}</div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Letter not submitted yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">No recommendation letters found.</p>
+    {% endif %}
+</div>
+
+<!-- Faculty Reviews Section -->
+<div class="mb-4">
+    <h5>Faculty Reviews</h5>
+    {% if applicant.reviews %}
+    {% for review in applicant.reviews %}
+    <div class="card mb-3">
+        <div class="card-header">
+            <strong>{{ review.reviewer.name }}</strong>
+            <span class="text-muted float-end">{{ review.submitted_at.strftime('%Y-%m-%d') if review.submitted_at else 'N/A' }}</span>
+        </div>
+        <div class="card-body">
+            <p><strong>Rating:</strong> 
+                {% if review.rating == 0 %}0 - Reject
+                {% elif review.rating == 1 %}1 - Borderline Admit
+                {% elif review.rating == 2 %}2 - Admit without Aid
+                {% else %}3 - Admit with Aid
+                {% endif %}
+            </p>
+            <p><strong>Advisor:</strong> {{ review.advisor.name }}</p>
+            {% if review.deficiency_courses %}
+            <p><strong>Deficiency Courses:</strong><br>{{ review.deficiency_courses | replace('\n', '<br>') | safe }}</p>
+            {% endif %}
+            {% if review.reject_reasons %}
+            <p><strong>Reject Reasons:</strong></p>
+            <ul>
+                {% for code in review.reject_reasons.split(',') %}
+                <li>
+                    {% if code == 'A' %}Incomplete Record{% elif code == 'B' %}Does not meet minimum requirements
+                    {% elif code == 'C' %}Problems with letters{% elif code == 'D' %}Not competitive
+                    {% elif code == 'E' %}Other reasons{% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            <p><strong>Comments:</strong><br>{{ review.comment | replace('\n', '<br>') | safe }}</p>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="text-muted">No reviews submitted yet.</p>
+    {% endif %}
+</div>
+
+
+                <!-- Final Decision Form -->
+                <div class="card mb-4">
+                    <div class="card-header">Final Decision</div>
+                    <div class="card-body">
+                        <form method="POST">
+                            <div class="mb-3">
+                                <label for="decision" class="form-label">Decision</label>
+                                <select id="decision" name="decision" class="form-select" required>
+                                    <option value="">Select a Decision</option>
+                                    <option value="Admit">Admit</option>
+                                    <option value="Admit with Aid">Admit with Aid</option>
+                                    <option value="Reject">Reject</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-success">Submit Final Decision</button>
+                        </form>
+                    </div>
+                </div>
+
+            </div> <!-- end card-body -->
+        </div> <!-- end big card -->
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

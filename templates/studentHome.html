@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Home</title>
+  <!-- Google Font + Font Awesome -->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-p+U6b8..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="/static/scripts.js" defer></script>
+</head>
+<body class="student-home-page">
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <button onclick="window.history.back()" class="nav-btn">
+      <i class="fas fa-arrow-left"></i> Back
+    </button>
+    <div class="home-btn">
+      <button onclick="location.href='/home'">
+        <i class="fas fa-home"></i> Home
+      </button>
+    </div>
+    <div class="dropdown">
+      <button onclick="toggleDropdown()" class="nav-btn">
+        <i class="fas fa-user-circle"></i> Account <i class="fas fa-caret-down"></i>
+      </button>
+      <div class="dropdown-content">
+        <a href="/editInfo"><i class="fas fa-user-edit"></i> Edit Personal Info</a>
+        <a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="dashboard">
+    <header class="dashboard-header">
+      <h1>Welcome, {{ user.fname }} {{ user.lname }}</h1>
+      <p>Your Program: <strong>{{ student.program or 'Undecided' }}</strong></p>
+      {% if student.gpa and student.gpa>0 %}
+        <p>Current GPA: <strong>{{ student.gpa }}</strong></p>
+      {% else %}
+        <p>No GPA yet. Start taking courses to calculate your GPA.</p>
+      {% endif %}
+    </header>
+
+    <!-- FLASH MESSAGES -->
+    {% if error %}<div class="flash-message-error"><p>{{ error }}</p></div>{% endif %}
+    {% if success %}<div class="flash-message-success"><p>{{ success }}</p></div>{% endif %}
+    {% if suss %}<div class="warning-message"><p>Warning: Too many low grades; you’re suspended.</p></div>{% endif %}
+
+    <!-- ACTION CARDS -->
+    <section class="actions-grid">
+      {% if student.form_submitted == 0 %}
+      <a href="/form" class="action-card">
+        <i class="fas fa-file-signature"></i>
+        <span>Complete Form</span>
+      </a>
+      {% endif %}
+
+      <a href="{{ url_for('course_schedule') }}" class="action-card">
+        <i class="fas fa-calendar-alt"></i>
+        <span>Course Schedule</span>
+      </a>
+
+      <a href="{{ url_for('show_register_page') }}" class="action-card">
+        <i class="fas fa-edit"></i>
+        <span>Register for Courses</span>
+      </a>
+
+      {% if coursesTaken %}
+      <a href="{{ url_for('transcript', uid=user.uid) }}" class="action-card">
+        <i class="fas fa-file-alt"></i>
+        <span>View Transcript</span>
+      </a>
+      {% endif %}
+
+      {% if 'PhD' in student.program %}
+        {% if student.thesis_approved == 0 %}
+        <a href="/thesis" class="action-card">
+          <i class="fas fa-book"></i>
+          <span>Submit/Edit Thesis</span>
+        </a>
+        {% else %}
+        <div class="action-card">
+          <i class="fas fa-check-circle"></i>
+          <span>Thesis Approved</span>
+        </div>
+        {% endif %}
+      {% endif %}
+
+      {% if student.form_approved == 1 %}
+        {% if student.graduation_requested == 0 and (student.form_submitted == 1) and (student.thesis_submitted or 'PhD' not in student.program) %}
+        <form action="/gradRequested" method="post" style="display:inline-block">
+          <button class="action-card" type="submit">
+            <i class="fas fa-graduation-cap"></i>
+            <span>Request Graduation</span>
+          </button>
+        </form>
+        {% else %}
+        <div class="action-card">
+          <i class="fas fa-check-circle"></i>
+          <span>Graduation {{ 'Requested' if student.graduation_requested else 'Unavailable' }}</span>
+        </div>
+        {% endif %}
+      {% endif %}
+    </section>
+
+    <!-- COURSES TAKEN -->
+    {% if coursesTaken %}
+    <section class="table-container">
+      <h2>Courses Already Taken</h2>
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th>Course</th><th>Dept</th><th>CRN</th><th>Credits</th><th>Semester</th><th>Grade</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in coursesTaken %}
+          <tr>
+            <td>{{ c.course_name }}</td>
+            <td>{{ c.dept }}</td>
+            <td>{{ c.course_number }}</td>
+            <td>{{ c.credits }}</td>
+            <td>{{ c.semester }}</td>
+            <td>{{ c.grade }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    {% endif %}
+
+    <!-- COURSES PLANNED / FORM PENDING -->
+    {% if student.form_approved == 1 and coursesPlan %}
+    <section class="table-container">
+      <h2>Courses Planned</h2>
+      <table class="styled-table">
+        <thead>
+          <tr><th>Course</th><th>Dept</th><th>CRN</th><th>Credits</th></tr>
+        </thead>
+        <tbody>
+          {% for c in coursesPlan %}
+          <tr>
+            <td>{{ c.course_name }}</td>
+            <td>{{ c.dept }}</td>
+            <td>{{ c.course_number }}</td>
+            <td>{{ c.credits }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+    {% elif student.form_submitted == 1 %}
+    <section class="actions-grid">
+      <a href="/viewForm/{{ student.uid }}" class="action-card">
+        <i class="fas fa-file-alt"></i>
+        <span>View Form</span>
+      </a>
+    </section>
+    {% endif %}
+
+    <!-- Optional Party Mode -->
+    <div class="party-button-container">
+      <button id="party-button" class="action-card" onclick="togglePartyMode()">
+        🎉 Party Mode
+      </button>
+    </div>
+  </main>
+</body>
+</html>

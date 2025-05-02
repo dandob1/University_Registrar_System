@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <script src="/static/scripts.js" defer></script> 
+
+</head>
+<body>
+    <div class="navbar">
+        <div class="homeButton"> 
+            <button onclick="location.href='/home'">Home</button>
+        </div>
+        <button onclick="window.location.href='{{ request.referrer }}'" class="back-button">Back</button>
+        <div class="dropdown">
+            <button type="button" onclick="toggleDropdown()">Account</button>
+            <div class="dropdown-content">
+                <a href="/editInfo">Edit Personal Info</a>
+                <a href="/logout">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% if error %}
+    <div class="flash-message-error">
+
+        <p class="error-message">{{ error }}</p>
+    </div>
+    {% endif %}
+
+    {% if success %}
+    <div class="flash-message-success">
+        <p class="success-message">{{ success }}</p>
+    </div>
+    {% endif %}
+    <main class="student-home-container" style="text-align: center;">
+        <h1>Name: {{ user['first_name'] }} {{ user['last_name'] }}</h1>
+        <h1>Program: {{ student['program'] }}</h1>
+
+        <div class = "form-page-container">
+            <div class = "form-column">
+                <h2>Course Selection</h2>
+                <form action="/form" method="POST">
+
+                <a href="/coursesnpreqs" class="primary-button">View Courses Offered</a>
+                <br>
+                <br>
+                    <table class = "course-selection-table">
+                        <thead>
+                            <tr class = "course-table-header">
+                                <th> ✅ </th>
+                                <th> Dept </th>
+                                <th> Course Number </th>
+                                <th> Credits </th>
+                                <th> Course Name </th>
+                                <th> PreRequisite 1 </th>
+                                <th> PreRequisite 2 </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for course in courses %}
+                                <tr>
+                                    <td>
+                                        {% if course['course_id'] in coursesTaken %}
+                                            <input type="checkbox" checked disabled>
+                                            <input type="hidden" name="courses" value="{{ course['course_id'] }}">
+                                        {% else %}
+                                            <input type="checkbox" name="courses" value="{{ course['course_id'] }}">
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ course['dept'] }}</td>
+                                    <td>{{ course['course_id'] }}</td>
+                                    <td>{{ course['credits'] }}</td>
+                                    <td>{{ course['course_name'] }}</td>
+                                    <td>{{ course['prereq1'] }}</td>
+                                    <td>{{ course['prereq2'] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    
+                    <button type = "submit">Submit</button>
+                </form>
+            </div>
+
+            <div class = "requirements-column">
+                <h2>Requirements</h2>
+                {% if student['program'] == 'MS in Computer Science' %}
+                    <ul id="requirements-list">
+                        <li>At Least 30 Credits Taken</li>
+                        <li>At Most 2 Courses Outside CSCI Dept</li>
+                        <li>
+                            Core Classes:
+                            <ul>
+                                <li>CSCI 6221 SW Paradigms	</li>
+                                <li>CSCI 6461 Computer Architecture</li>
+                                <li>CSCI 6212 Algorithms</li>
+                            </ul>
+                        </li>
+                    </ul>
+                {% elif student['program'] == 'PhD in Computer Science' %}
+                    <ul id="requirements-list">
+                        <li>At Least 36 Credits Taken</li>
+                        <li>At Least 30 Credits Taken In The CSCI Dept</li>
+                    </ul>
+                {% endif %}
+            </div>
+        </div>   
+    </main>
+</body>
+</html>

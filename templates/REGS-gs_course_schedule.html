@@ -1,0 +1,157 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Course Schedule</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="/static/scripts.js" defer></script>
+  <style>
+    /* Enhanced semester tabs styling */
+    .semester-tabs {
+      display: flex;
+      margin: 20px 0;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      background: #f8f9fa;
+    }
+    
+    .semester-tabs a {
+      flex: 1;
+      text-align: center;
+      padding: 12px 0;
+      text-decoration: none;
+      color: #495057;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      border-bottom: 3px solid transparent;
+    }
+    
+    .semester-tabs a:hover {
+      background: #e9ecef;
+      color: #212529;
+    }
+    
+    .semester-tabs a.active {
+      background: #fff;
+      color: #2c3e50;
+      border-bottom: 3px solid #3498db;
+      font-weight: 600;
+    }
+    
+    /* Make it responsive */
+    @media (max-width: 768px) {
+      .semester-tabs {
+        flex-direction: column;
+      }
+      
+      .semester-tabs a {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body class="grad-secretary-page">
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="homeButton">
+      <button onclick="location.href='/home'">Home</button>
+    </div>
+    <button onclick="window.location.href='{{ request.referrer }}'" class="back-button">
+      ← Back
+    </button>
+    <div class="dropdown">
+      <button onclick="toggleDropdown()">Account</button>
+      <div class="dropdown-content">
+        <a href="/editInfo">Edit Personal Info</a>
+        <a href="/logout">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main class="student-home-container">
+    <h1>DDM University</h1>
+    <h2>Course Schedule – Graduate Secretary View</h2>
+
+    <div class="search-form">
+      <form method="GET">
+        <input
+          type="text"
+          name="search"
+          placeholder="Search by CRN, title, or instructor"
+          value="{{ search_term or '' }}"
+        >
+        <button type="submit">Search</button>
+        {% if search_term %}
+          <a href="{{ url_for('gs_course_schedule') }}">Clear</a>
+        {% endif %}
+      </form>
+    </div>
+    
+    <div class="semester-tabs">
+      <a href="{{ url_for('gs_course_schedule', semester='Spring 25', search=search_term or '') }}"
+         class="{% if selected_semester == 'Spring 25' %}active{% endif %}">
+        Spring 2025
+      </a>
+      <a href="{{ url_for('gs_course_schedule', semester='Fall 25', search=search_term or '') }}"
+         class="{% if selected_semester == 'Fall 25' %}active{% endif %}">
+        Fall 2025
+      </a>
+    </div>
+
+    {% if courses %}
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th>CRN</th>
+            <th>Course Title</th>
+            <th>Department</th>
+            <th>Credits</th>
+            <th>Day</th>
+            <th>Time</th>
+            <th>Instructor</th>
+            <th>Registered Students</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for course in courses %}
+          <tr>
+            <td>{{ course.crn }}</td>
+            <td>{{ course.coursetitle }}</td>
+            <td>{{ course.department }}</td>
+            <td>{{ course.credits }}</td>
+            <td>{{ course.day }}</td>
+            <td class="time-column">{{ course.time }}</td>
+            <td>{{ course.instructor_first }} {{ course.instructor_last }}</td>
+            <td>
+              {% if course.students %}
+              <ul>
+                {% for student in course.students %}
+                  <li>
+                    {{ student.last_name }}, {{ student.first_name }}
+                    ({{ student.uid }}) —
+                    Grade: {{ student.grade or 'IP' }}
+                  </li>
+                {% endfor %}
+              </ul>
+              {% else %}
+                No students
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="no-courses">
+        {% if search_term %}
+          No courses found matching “{{ search_term }}.”
+        {% else %}
+          No courses available.
+        {% endif %}
+      </div>
+    {% endif %}
+  </main>
+</body>
+</html>

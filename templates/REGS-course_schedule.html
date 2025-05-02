@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Course Schedule</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="/static/scripts.js" defer></script>
+  <style>
+    /* Semester buttons styling */
+    .filter-container {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 1rem 0;
+    }
+    .filter-container a {
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      background-color: #555;
+      color: #fff;
+      transition: background-color 0.3s;
+    }
+    .filter-container a:hover {
+      background-color: #444;
+    }
+    .filter-container a.active-button {
+      background-color: #3498db;
+      color: #fff;
+    }
+    /* Search form layout */
+    .search-form {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 1.5rem;
+    }
+    .search-form input[type="text"] {
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      width: 300px;
+    }
+    .search-form button, .search-form .secondary-button {
+      padding: 8px 12px;
+    }
+  </style>
+</head>
+<body>
+  <!-- top navbar -->
+  <div class="navbar">
+    <div class="homeButton">
+      <button onclick="location.href='/home'">Home</button>
+    </div>
+    <button onclick="window.location.href='{{ request.referrer }}'" class="back-button">Back</button>
+    <div class="dropdown">
+      <button type="button" onclick="toggleDropdown()">Account</button>
+      <div class="dropdown-content" id="accountMenu">
+        <a href="/editInfo">Edit Personal Info</a>
+        <a href="/logout">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- main content -->
+  <div class="student-home-container">
+    <h1>DDM University</h1>
+    <h2>Course Schedule – {{ selected_semester }}</h2>
+
+    <!-- Semester picker -->
+    <div class="filter-container">
+      <a href="?semester=Spring 25{% if search_term %}&search={{ search_term }}{% endif %}"
+         class="{% if selected_semester=='Spring 25' %}active-button{% endif %}">Spring 2025</a>
+      <a href="?semester=Fall 25{% if search_term %}&search={{ search_term }}{% endif %}"
+         class="{% if selected_semester=='Fall 25' %}active-button{% endif %}">Fall 2025</a>
+    </div>
+
+    <!-- Search -->
+    <form method="get" action="{{ url_for('course_schedule') }}" class="search-form">
+      <input type="hidden" name="semester" value="{{ selected_semester }}">
+      <input type="text" name="search" placeholder="Search courses..." value="{{ search_term or '' }}">
+      <button type="submit" class="primary-button">Search</button>
+      {% if search_term %}
+        <a href="{{ url_for('course_schedule', semester=selected_semester) }}" class="secondary-button">Clear</a>
+      {% endif %}
+    </form>
+
+    {% if courses %}
+      <table class="table">
+        <thead>
+          <tr>
+            <th>CRN</th>
+            <th>Course Title</th>
+            <th>Dept</th>
+            <th>Credits</th>
+            <th>Prerequisites</th> 
+            <th>Day</th>
+            <th>Time</th>
+            <th>Room</th>
+            <th>Instructor</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for course in courses %}
+          <tr>
+            <td>{{ course.crn }}</td>
+            <td>{{ course.title }}</td>
+            <td>{{ course.department }}</td>
+            <td>{{ course.credits }}</td>
+            <td>{{ course.prerequisites }}</td>
+            <td>{{ course.day }}</td>
+            <td>{{ course.time }}</td>
+            <td>{{ course.room_num }}</td>
+            <td>{{ course.instructor }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>
+        {% if search_term %}
+          No courses found matching “{{ search_term }}”.
+        {% else %}
+          No courses available for {{ selected_semester }}.
+        {% endif %}
+      </p>
+    {% endif %}
+  </div>
+
+  <script>
+    function toggleDropdown() {
+      document.getElementById('accountMenu').classList.toggle('show');
+    }
+    window.addEventListener('click', e => {
+      if (!e.target.matches('.dropdown button')) {
+        document.getElementById('accountMenu').classList.remove('show');
+      }
+    });
+  </script>
+</body>
+</html>

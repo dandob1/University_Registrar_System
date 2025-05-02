@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcript</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <script src="/static/scripts.js" defer></script> 
+
+    <div class="navbar">
+        <div class = "homeButton"> 
+            <button onclick="location.href='/home'">Home</button>
+        </div>
+        <button onclick="window.location.href='{{ request.referrer }}'" class="back-button">Back</button>
+        <div class="dropdown">
+            <button type="button" onclick="toggleDropdown()">Account</button>
+            <div class="dropdown-content">
+                <a href="/editInfo">Edit Personal Info</a>
+                <a href="/logout">Logout</a>
+            </div>
+        </div>
+    </div>
+
+</head>
+<body>
+    <main class="student-home-container" style="text-align: center;">
+
+    <h1> Transcript </h1>
+
+    <h3>The advisor for {{ studentName }} is {{ display }}</h3>
+
+    <!-- Display success or error messages -->
+    {% if success %}
+        <div class="flash-message-success">
+            <p>{{ success }}</p>
+        </div>
+    {% endif %}
+
+    {% if error %}
+        <div class="flash-message-error">
+            <p>{{ error }}</p>
+        </div>
+    {% endif %}
+
+    <a href="/course_schedule" class="primary-button">View Courses Offered</a>
+
+
+    <table border="1">
+        <tr>
+          <th>Semester:</th>
+          <th>Subject:</th>
+          <th>Course:</th>
+          <th>Credits:</th>
+          <th>Grade Earned:</th>
+          <th>Calculated Credit Hours:</th>
+    
+        </tr>
+        {% if transcript %}
+            {% for trans in transcript %}
+            <tr>
+            <td>{{ trans.semester }}</td>
+            <td>{{ trans.dept }}</td>
+            <td>{{ trans.course_name }} {{ trans.course_number }}</td>
+            <td>{{ trans.credits  }}</td>
+            <td>{{ trans.grade  }}</td>
+            <td>
+            {% if trans.grade == 'A' %}
+            4
+            {% elif trans.grade == 'A-' %}
+            3.7
+            {% elif trans.grade == 'B+' %}
+            3.4
+            {% elif trans.grade == 'B' %}
+            3
+            {% elif trans.grade == 'B-' %}
+            2.7
+            {% elif trans.grade == 'C+' %}
+            2.4
+            {% elif trans.grade == 'C' %}
+            2 
+            {% elif trans.grade == 'C-' %}
+            1.7
+            {% elif trans.grade == 'D+' %}
+            1.4
+            {% elif trans.grade == 'D' %}
+            1 
+            {% elif trans.grade == 'D-' %}
+            0.7
+            {% elif trans.grade == 'F' %}
+            0 
+            {% else %}
+            N/A
+            {% endif %}
+            </td>
+            </tr>
+            {% endfor %}
+            {% if cumulative_gpa is not none %}
+                <h3>Cumulative GPA: {{ cumulativeGPA }} </h3>
+            {% else %}
+                <h3>Cumulative GPA: N/A </h3>
+            {% endif %}
+        {% else %}
+            <tr><td colspan="5">No transcript data available.</td></tr>
+        {% endif %}
+      </table>
+      </main>
+
+
+</body>
+</html>

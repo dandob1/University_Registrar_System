@@ -1,0 +1,64 @@
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>All Graduate Secretaries</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="/static/scripts.js" defer></script>
+</head>
+<body class="system-admin-page">
+
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="homeButton">
+      <button onclick="location.href='/home'">Home</button>
+    </div>
+    <button onclick="window.location.href='{{ request.referrer }}'" class="back-button">← Back</button>
+    <div class="dropdown">
+      <button onclick="toggleDropdown()">Account</button>
+      <div class="dropdown-content">
+        <a href="/editInfo">Edit Personal Info</a>
+        <a href="/logout">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="form-container">
+    <h1>All Graduate Secretaries</h1>
+
+
+    <form method="GET" action="{{ url_for('admin_view_gs') }}" class="search-form">
+      <input type="text" name="search" placeholder="Search by name or ID" value="{{ search_term if search_term }}">
+      <button type="submit" class="primary-button">Search</button>
+    </form>
+
+    {% if grad_secretaries %}
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th>GS ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Edit User</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for gs in grad_secretaries %}
+          <tr>
+            <td>{{ gs.uid }}</td>
+            <td>{{ gs.last_name }}, {{ gs.first_name }}</td>
+            <td>{{ gs.email }}</td>
+            <td><a href="{{ url_for('editUser', uid=gs.uid) }}" class="action-button edit">Edit</a>
+                <form action="{{ url_for('deleteUser', uid=gs.uid) }}" method="POST" onsubmit="return confirm('Delete user {{ gs.uid }}?');">
+                    <button type="submit" class="action-button delete">Delete</button>
+                  </form></td></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No graduate secretaries found.</p>
+    {% endif %}
+  </main>
+</body>
+</html>

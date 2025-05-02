@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thesis</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <script src="/static/scripts.js" defer></script> 
+
+</head>
+<body>
+    <div class="navbar">
+        <div class="homeButton"> 
+            <button onclick="location.href='/home'">Home</button>
+        </div>
+        <button onclick="window.location.href='{{ request.referrer }}'" class="back-button">Back</button>
+        <div class="dropdown">
+            <button type="button" onclick="toggleDropdown()">Account</button>
+            <div class="dropdown-content">
+                <a href="/editInfo">Edit Personal Info</a>
+                <a href="/logout">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <main class="student-home-container" style="text-align: center;">
+
+    <!-- Flash Messages -->
+    {% if error %}
+    <div class="flash-message-error">
+
+        <p class="error-message">{{ error }}</p>
+    </div>
+    {% endif %}
+
+    {% if success %}
+    <div class="flash-message-success">
+        <p class="success-message">{{ success }}</p>
+    </div>
+    {% endif %}
+    
+
+
+    <form action="{{ url_for('thesis') }}" method="POST">
+        <p>Name: {{ user['fname'] }} {{ user['lname'] }}</p>
+        <p>Program: {{ student['program'] }}</p>
+        <label for="title">Thesis Title:</label><br/>
+            <input type="text" id="title" name="title" value="{{ thesis_title if thesis_title else '' }}" /><br/><br/>
+
+            <label for="thesis">Type Thesis Here:</label><br/>
+            <textarea 
+              id="thesis" 
+              name="thesis" 
+              rows="10" 
+              cols="60" 
+              placeholder="Enter your thesis content here..."
+            >{{ thesis if thesis else "" }}</textarea>
+            <br/><br/>
+            <button type="submit">Submit Thesis</button>
+        
+    </form>
+    </main>
+</body>
+</html>

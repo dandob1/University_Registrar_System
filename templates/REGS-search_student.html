@@ -1,0 +1,52 @@
+<html>
+<head>
+    <title>Search Students</title>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { color: #333; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        form { margin: 20px 0; }
+        input { padding: 8px; width: 70%; }
+        button { padding: 8px 15px; }
+        .back-link { display: block; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Zymies University</h1>
+    <h2>Search for a Student</h2>
+    
+    <a href="{{ url_for('gs_home') }}" class="back-link">← Back to Portal</a>
+    
+    <form method="POST">
+        <input type="text" name="search_term" placeholder="Search by name or ID" 
+               value="{{ search_term if search_term else '' }}">
+        <button type="submit">Search</button>
+    </form>
+    
+    {% if students %}
+    <h3>Search Results</h3>
+    <table>
+        <tr>
+            <th>Student ID</th>
+            <th>Name</th>
+            <th>Program</th>
+            <th>Actions</th>
+        </tr>
+        {% for student in students %}
+        <tr>
+            <td>{{ student['uid'] }}</td>
+            <td>{{ student['last_name'] }}, {{ student['first_name'] }}</td>
+            <td>{{ student['program'] }}</td>
+            <td>
+                <a href="{{ url_for('view_gs_transcript', student_id=student['uid']) }}">View Transcript</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% elif request.method == 'POST' %}
+    <p>No students found matching your search.</p>
+    {% endif %}
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="reset-db-container">
+        <form method="POST" action="/resetdb" onsubmit="return confirm('Are you sure you want to reset the database? This cannot be undone.');">
+            <button type="submit" class="danger-button">Reset Database</button>
+        </form>
+    </div>
+
+    {% if error %}
+        <div class="flash-message-error">
+            <p class="error-message">{{ error }}</p>
+        </div>
+    {% endif %}
+
+    {% if success %}
+        <div class="flash-message-success">
+            <p class="success-message">{{ success }}</p>
+        </div>
+    {% endif %}
+
+    <div class="login-container">
+        <h1>Login</h1>
+        <form action="/" method="post">
+            <label for="uid">Enter your User ID or Email:</label>
+            <input type="text" id="uid" name="uid" required>
+            
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            
+            <button type="submit" class="primary-button">Login</button>
+        </form>
+
+        <form action="/applicant/register" method="get">
+            <button type="submit" class="primary-button">Apply to University</button>
+        </form>
+    </div>
+</body>
+</html>

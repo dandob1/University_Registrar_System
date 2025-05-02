@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Student Transcript</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="/static/scripts.js" defer></script>
+</head>
+<body class="student-page">
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="homeButton">
+      <button onclick="location.href='/home'">Home</button>
+    </div>
+    <button onclick="window.location.href='{{ request.referrer  }}'" class="back-button">
+        Back
+    </button>
+    <div class="dropdown">
+      <button onclick="toggleDropdown()">Account</button>
+      <div class="dropdown-content">
+        <a href="/editInfo">Edit Personal Info</a>
+        <a href="/logout">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTAINER -->
+  <main class="student-home-container">
+    <h1>DDM University</h1>
+    <h2>Student Transcript</h2>
+
+    {% if error %}
+      <div class="flash-message-error">
+        <p>{{ error }}</p>
+      </div>
+    {% endif %}
+
+    <div class="student-info">
+      <h3>{{ student['first_name'] }} {{ student['last_name'] }}</h3>
+      <p><strong>ID:</strong> {{ student['uid'] }} &nbsp; | &nbsp; 
+         <strong>Program:</strong> {{ student['program'] }}</p>
+    </div>
+
+    <table class="styled-table">
+      <thead>
+        <tr>
+          <th>CRN</th>
+          <th>Course Title</th>
+          <th>Credits</th>
+          <th>Semester</th>
+          <th>Grade</th>
+          <th>Instructor</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in transcript %}
+        <tr>
+          <td>{{ row['crn'] }}</td>
+          <td>{{ row['course_title'] }}</td>
+          <td>{{ row['credits'] }}</td>
+          <td>{{ row['semester'] }}</td>
+          <td>{{ row['grade'] if row['grade'] else 'IP' }}</td>
+          <td>{{ row['instructor'] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="button-container" style="text-align:center; margin-top:1.5rem;">
+        <a href="{{ url_for('classes_taught') }}">
+        <button type="button" class="highlighted-button">Back to My Classes</button>
+        </a>
+    </div>
+  </main>
+</body>
+</html>

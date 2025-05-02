@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Faculty Advisor Home</title>
+  <!-- Google Font + Font Awesome -->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-p+U6b8..."
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="/static/scripts.js" defer></script>
+</head>
+<body class="faculty-advisor-page">
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <button onclick="window.history.back()" class="nav-btn">
+      <i class="fas fa-arrow-left"></i> Back
+    </button>
+    <div class="home-btn">
+      <button onclick="location.href='/home'">
+        <i class="fas fa-home"></i> Home
+      </button>
+    </div>
+    <div class="dropdown">
+      <button onclick="toggleDropdown()" class="nav-btn">
+        <i class="fas fa-user-circle"></i> Account <i class="fas fa-caret-down"></i>
+      </button>
+      <div class="dropdown-content">
+        <a href="/editInfo"><i class="fas fa-user-edit"></i> Edit Personal Info</a>
+        <a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- main card -->
+  <main class="student-home-container" style="text-align: center;">
+    <h1>Welcome, {{user.fname}}</h1>
+
+    <div class="button-container" style="display: flex; justify-content: center; gap: 1rem; margin-top: 1rem;">
+      <a href="{{ url_for('course_schedule') }}">
+        <button type="button" class="highlighted-button">
+          <i class="fas fa-calendar-alt"></i> Course Schedule
+        </button>
+      </a>
+      <a href="{{ url_for('classes_taught') }}">
+        <button type="button" class="highlighted-button">
+          <i class="fas fa-chalkboard-teacher"></i> Classes Taught
+        </button>
+      </a>
+      <a href="{{ url_for('faculty_dashboard') }}">
+        <button type="button" class="highlighted-button">
+          <i class="fas fa-file-alt"></i> View Applications
+        </button>
+      </a>
+    </div>
+
+    <h2>Advisees</h2>
+
+    <form id="studentSearchForm" onsubmit="return false;" style="margin-bottom: 1rem;">
+      <input type="text" id="studentSearch" placeholder="Search Students">
+    </form>
+
+    <table class="styled-table" style="margin-top: 1rem;">
+      <thead>
+        <tr>
+          <th>UID</th>
+          <th>Name</th>
+          <th>Program</th>
+          <th>Form Status</th>
+          <th>Thesis Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="studentList">
+        {% if students %}
+          {% for student in students %}
+            <tr>
+              <td>{{ student.uid }}</td>
+              <td>{{ student.fname }} {{ student.lname }}</td>
+              <td>{{ student.program }}</td>
+              <td>
+                {% if student.form_submitted == 0 %}
+                  Form Incomplete
+                {% elif student.form_approved == 0 %}
+                  Pending Approval
+                {% else %}
+                  Approved
+                {% endif %}
+              </td>
+              <td>
+                {% if 'PhD' in student.program %}
+                  {% if student.thesis_submitted == 0 %}
+                    Not Submitted
+                  {% elif student.thesis_approved == 0 %}
+                    Pending Approval
+                  {% else %}
+                    Approved
+                  {% endif %}
+                {% else %}
+                  N/A
+                {% endif %}
+              </td>
+              <td class="actions-cell">
+                {% if student.form_submitted == 1 and student.form_approved == 0 %}
+                  <button class="action-btn"
+                          onclick="location.href='/viewForm/{{ student.uid }}'">
+                    <i class="fas fa-file-signature"></i> Approve Form
+                  </button>
+                {% elif student.form_submitted == 1 %}
+                  <button class="action-btn"
+                          onclick="location.href='/viewForm/{{ student.uid }}'">
+                    <i class="fas fa-file-alt"></i> View Form
+                  </button>
+                {% endif %}
+
+                <button class="action-btn"
+                        onclick="location.href='/transcript/{{ student.uid }}'">
+                  <i class="fas fa-file-alt"></i> View Transcript
+                </button>
+
+                {% if 'PhD' in student.program and student.thesis_submitted == 1 %}
+                  <button class="action-btn"
+                          onclick="location.href='/viewThesis/{{ student.uid }}'">
+                    <i class="fas fa-book"></i> View Thesis
+                  </button>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="6">No students found.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </main>
+</body>
+</html>

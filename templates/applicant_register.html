@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Applicant Registration</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
+    <style>
+      body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #f0f4f8;
+        padding: 2rem 0;
+        color: #2c3e50;
+      }
+      .register-container {
+        background-color: #ffffff;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 0 12px rgba(0, 0, 0, 0.05);
+        max-width: 850px;
+        width: 90%;
+        margin: 0 auto;
+      }
+      .section-header {
+        background-color: #f1f3f5;
+        padding: 0.75rem 1rem;
+        margin: 1.5rem 0 1rem;
+        border-radius: 6px;
+        font-weight: 600;
+        color: #1f3f5b;
+      }
+      .form-control, .form-select {
+        border-radius: 6px;
+        margin-bottom: 1rem;
+      }
+      .btn-primary {
+        background-color: #1f3f5b;
+        border-color: #1f3f5b;
+      }
+      .btn-outline-primary {
+        border-color: #1f3f5b;
+        color: #1f3f5b;
+      }
+      .btn-outline-primary:hover {
+        background-color: #1f3f5b;
+        color: #ffffff;
+      }
+      .btn-success {
+        background-color: #198754;
+        border-color: #198754;
+      }
+      .gre-subject, .prior-degree {
+        background-color: #f8f9fa;
+        border: 1px solid #dee2e6;
+        padding: 1rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+      }
+      .remove-btn {
+        margin-top: 0.5rem;
+      }
+      small.form-text {
+        color: #6c757d;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="register-container">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Applicant Registration</h2>
+        <a href="{{ url_for('login') }}" class="btn btn-link">Already have an account? Login</a>
+      </div>
+  
+      {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+      {% endif %}
+
+        <form method="POST" action="{{ url_for('applicant_register') }}">
+            <!-- Personal Information Section -->
+            <h4 class="section-header">Personal Information</h4>
+            <div class="mb-3">
+                <label for="name" class="form-label">Full Name</label>
+                <input type="text" class="form-control" id="name" name="name" required
+                    placeholder="Enter your full name" value="{{ form_data.name or '' }}">
+            </div>
+
+            <div class="mb-3">
+                <label for="ssn" class="form-label">SSN (Format: XXX-XX-XXXX)</label>
+                <input type="text" class="form-control" id="ssn" name="ssn" pattern="[0-9]{3}-[0-9]{2}-[0-9]{4}"
+                    required placeholder="Enter your SSN" value="{{ form_data.ssn or '' }}">
+            </div>
+
+            <div class="mb-3">
+                <label for="address" class="form-label">Address</label>
+                <textarea class="form-control" id="address" name="address" rows="3" required
+                    placeholder="Enter your address">{{ form_data.address or '' }}</textarea>
+            </div>
+
+            <!-- Academic Information Section -->
+            <h4 class="section-header">Academic Information</h4>
+            <div class="mb-3">
+                <label for="semester" class="form-label">Application Semester</label>
+                <select class="form-select" id="semester" name="semester" required>
+                    <option value="Fall 2024" {% if form_data.semester=='Fall 2024' %}selected{% endif %}>Fall 2024
+                    </option>
+                    <option value="Spring 2025" {% if form_data.semester=='Spring 2025' %}selected{% endif %}>Spring
+                        2025</option>
+                    <option value="Fall 2025" {% if form_data.semester=='Fall 2025' %}selected{% endif %}>Fall 2025
+                    </option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label for="degree_sought" class="form-label">Degree Sought</label>
+                <select class="form-select" id="degree_sought" name="degree_sought" required
+                    onchange="updateGRERequirements()">
+                    <option value="MS" {% if form_data.degree_sought=='MS' %}selected{% endif %}>Masters (MS) program
+                    </option>
+                    <option value="PhD" {% if form_data.degree_sought=='PhD' %}selected{% endif %}>Doctoral (PhD)
+                        program</option>
+                </select>
+            </div>
+
+            <!-- GRE Scores Section -->
+            <h4 class="section-header">GRE Scores <span id="gre-required-text" class="ms-optional">(Optional for MS
+                    applicants, Required for PhD applicants)</span></h4>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="gre_verbal" class="form-label">GRE Verbal Score</label>
+                        <input type="number" class="form-control gre-score" id="gre_verbal" name="gre_verbal" min="130"
+                            max="170" placeholder="130-170" value="{{ form_data.gre_verbal or '' }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="gre_quant" class="form-label">GRE Quantitative Score</label>
+                        <input type="number" class="form-control gre-score" id="gre_quant" name="gre_quant" min="130"
+                            max="170" placeholder="130-170" value="{{ form_data.gre_quant or '' }}">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-3">
+                        <label for="gre_year" class="form-label">GRE Year</label>
+                        <input type="number" class="form-control gre-score" id="gre_year" name="gre_year" min="2000"
+                            max="2030" placeholder="Year taken" value="{{ form_data.gre_year or '' }}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRE Subject Tests Section -->
+            <h4 class="section-header">GRE Subject Tests <small>(Optional)</small></h4>
+            <div id="gre_subjects_container">
+                <!-- GRE subject entries will be added here when button is clicked or from saved data -->
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-primary mt-2 mb-3" onclick="addGRESubject()">+ Add GRE
+                Subject Test</button>
+
+            <!-- Prior Degrees Section -->
+            <h4 class="section-header">Prior Degrees</h4>
+            <div id="prior_degrees_container">
+                <!-- Prior degree entries will be populated here -->
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-primary mt-2 mb-3" onclick="addPriorDegree()">+ Add
+                Prior Degree</button>
+
+            <!-- Transcript Upload Section-->
+            <h4 class="section-header">Transcript</h4>
+            <div class="mb-3">
+                <label for="Transcript" class="form-label">Upload Transcript (PDF only)</label>
+                <input type="file" class="form-control" id="Transcript" name="Transcript" accept="Application/pdf">
+                <small class="form-text text-muted">Please upload a PDF of your official transcript.</small>
+            </div>
+
+            <!-- Additional Information Section -->
+            <h4 class="section-header">Additional Information</h4>
+            <div class="mb-3">
+                <label for="work_experience" class="form-label">Prior Work Experience</label>
+                <textarea class="form-control" id="work_experience" name="work_experience" rows="3"
+                    placeholder="Describe your relevant work experience">{{ form_data.work_experience or '' }}</textarea>
+            </div>
+
+            <div class="mb-3">
+                <label for="areas_of_interest" class="form-label">Areas of Interest</label>
+                <textarea class="form-control" id="areas_of_interest" name="areas_of_interest" rows="3"
+                    placeholder="Describe your academic and research interests">{{ form_data.areas_of_interest or '' }}</textarea>
+            </div>
+
+            <!-- Password Section -->
+            <h4 class="section-header">Account Security</h4>
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required
+                    placeholder="Create a password">
+            </div>
+
+            <div class="mb-3">
+                <label for="confirm_password" class="form-label">Confirm Password</label>
+                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required
+                    placeholder="Confirm your password">
+            </div>
+
+            <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">Register</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Counter for unique IDs
+        let greSubjectCount = 0;
+        let priorDegreeCount = 0;
+
+        // Update GRE requirements based on degree selected
+        function updateGRERequirements() {
+            const degreeValue = document.getElementById('degree_sought').value;
+            const greFields = document.querySelectorAll('.gre-score');
+
+            if (degreeValue === 'PhD') {
+                // Make GRE required for PhD
+                greFields.forEach(field => {
+                    field.setAttribute('required', '');
+                });
+                document.getElementById('gre-required-text').textContent = "(Required for PhD applicants)";
+            } else {
+                // Make GRE optional for MS
+                greFields.forEach(field => {
+                    field.removeAttribute('required');
+                });
+                document.getElementById('gre-required-text').textContent = "(Optional for MS applicants)";
+            }
+        }
+
+        // Add GRE Subject test
+        function addGRESubject(subject = '', score = '', year = '') {
+            greSubjectCount++;
+            const container = document.getElementById('gre_subjects_container');
+            const newSubject = document.createElement('div');
+            newSubject.className = 'gre-subject';
+            newSubject.id = 'gre_subject_' + greSubjectCount;
+            newSubject.innerHTML = `
+                <div class="row">
+                    <div class="col-md-5">
+                        <div class="mb-3">
+                            <label class="form-label">Subject</label>
+                            <input type="text" class="form-control" name="gre_subject_name[]" placeholder="e.g., Computer Science" value="${subject}">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label class="form-label">Score</label>
+                            <input type="number" class="form-control" name="gre_subject_score[]" min="200" max="990" placeholder="200-990" value="${score}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="mb-3">
+                            <label class="form-label">Year</label>
+                            <input type="number" class="form-control" name="gre_subject_year[]" min="2000" max="2030" placeholder="Year taken" value="${year}">
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-btn" onclick="removeGRESubject(this)">Remove</button>
+            `;
+            container.appendChild(newSubject);
+        }
+
+        // Remove GRE Subject test
+        function removeGRESubject(button) {
+            const subject = button.parentNode;
+            subject.parentNode.removeChild(subject);
+        }
+
+        // Add Prior Degree
+        function addPriorDegree(degreeType = 'Bachelors', university = '', year = '', gpa = '') {
+            priorDegreeCount++;
+            const container = document.getElementById('prior_degrees_container');
+            const newDegree = document.createElement('div');
+            newDegree.className = 'prior-degree';
+            newDegree.id = 'prior_degree_' + priorDegreeCount;
+            newDegree.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Degree Type</label>
+                            <select class="form-select" name="degree_type[]" required>
+                                <option value="Bachelors" ${degreeType === 'Bachelors' ? 'selected' : ''}>Bachelors</option>
+                                <option value="Masters" ${degreeType === 'Masters' ? 'selected' : ''}>Masters</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">University</label>
+                            <input type="text" class="form-control" name="university[]" required placeholder="University name" value="${university}">
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">Year</label>
+                            <input type="number" class="form-control" name="degree_year[]" required min="1950" max="2030" placeholder="Year graduated" value="${year}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label class="form-label">GPA</label>
+                            <input type="number" class="form-control" name="gpa[]" required step="0.01" min="0" max="4.0" placeholder="GPA (0.0-4.0)" value="${gpa}">
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger remove-btn" onclick="removePriorDegree(this)">Remove</button>
+            `;
+            container.appendChild(newDegree);
+        }
+
+        // Remove Prior Degree
+        function removePriorDegree(button) {
+            const degree = button.parentNode;
+            if (document.querySelectorAll('.prior-degree').length > 1) {
+                degree.parentNode.removeChild(degree);
+            }
+        }
+
+        // Initialize form with correct validation and restore saved data
+        document.addEventListener('DOMContentLoaded', function () {
+            updateGRERequirements();
+
+            // Populate GRE subject tests if there are saved values
+            {% if form_data and form_data.gre_subjects %}
+            {% for subject in form_data.gre_subjects %}
+            addGRESubject("{{ subject.subject|default('') }}", "{{ subject.score|default('') }}", "{{ subject.year|default('') }}");
+            {% endfor %}
+            {% endif %}
+
+            // Populate prior degrees if there are saved values
+            {% if form_data and form_data.prior_degrees %}
+            {% for degree in form_data.prior_degrees %}
+            addPriorDegree("{{ degree.degree_type|default('Bachelors') }}", "{{ degree.university|default('') }}", "{{ degree.year|default('') }}", "{{ degree.gpa|default('') }}");
+            {% endfor %}
+            {% else %}
+            // Add at least one prior degree field by default
+            addPriorDegree();
+            {% endif %}
+        })
+
+        // Initialize with saved recommendation letter data if any
+        document.addEventListener('DOMContentLoaded', function () {
+            // ... existing initialization code ...
+            {% if form_data and form_data.recommendation_letters %}
+            {% for letter in form_data.recommendation_letters %}
+            addRecommendationLetter("{{ letter.writer_name|default('') }}", "{{ letter.writer_email|default('') }}");
+            {% endfor %}
+            {% endif %}
+        });
+    </script>
+</body>
+
+</html>

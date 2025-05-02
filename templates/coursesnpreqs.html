@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courses List</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <script src="/static/scripts.js" defer></script> 
+
+    <div class="navbar">
+        <div class = "homeButton"> 
+            <button onclick="location.href='/home'">Home</button>
+        </div>
+        <button onclick="window.location.href='{{ request.referrer }}'" class="back-button">Back</button>
+        <div class="dropdown">
+            <button type="button" onclick="toggleDropdown()">Account</button>
+            <div class="dropdown-content">
+                <a href="/editInfo">Edit Personal Info</a>
+                <a href="/logout">Logout</a>
+            </div>
+        </div>
+    </div>
+
+</head>
+<body>
+    <main class="student-home-container" style="text-align: center;">
+    <h1>Offered Courses:</h1>
+    <table border="1">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Dept</th>
+          <th>Course Number</th>
+          <th>Credits</th>
+          <th>Prerequisites</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for course in courses %}
+        <tr>
+          <td>{{ course['course_name'] }}</td>
+          <td>{{ course['dept'] }}</td>
+          <td>{{ course['course_number'] }}</td>
+          <td>{{ course['credits'] }}</td>
+          <td>{{ course['prerequisites'] | join(', ') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+
+</body>
+</html>

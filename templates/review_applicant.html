@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Applicant</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8fafc;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .card {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .card-header {
+            background-color: #1f3f5b;;
+            border-bottom: 1px solid #cbd5e1;
+            font-weight: 600;
+            color: #fff;
+        }
+        .info-item {
+            margin-bottom: 10px;
+        }
+        .info-label {
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        .info-text {
+            color: #1e293b;
+        }
+        .letter-content {
+            white-space: pre-wrap;
+            font-family: 'Times New Roman', Times, serif;
+            line-height: 1.6;
+            padding: 15px;
+            background-color: #f1f5f9;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .accordion-button {
+            background-color: #f1f5f9;
+        }
+        .accordion-button:not(.collapsed) {
+            background-color: #e2e8f0;
+            color: #0f172a;
+        }
+        .form-control, .form-select {
+            border-radius: 8px;
+        }
+        .btn-primary {
+            background-color: #2563eb;
+            border-color: #2563eb;
+        }
+        .btn-outline-danger {
+            border-radius: 8px;
+        }
+        .badge.bg-warning {
+            background-color: #facc15;
+            color: #1e293b;
+        }
+        .badge.bg-success {
+            background-color: #22c55e;
+        }
+        .badge.bg-primary {
+            background-color: #3b82f6;
+        }
+        .alert-info {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+        }
+        .form-check-input:checked {
+            background-color: #2563eb;
+            border-color: #2563eb;
+        }
+    </style>
+</head>
+<body>
+<body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show mx-3 mt-3" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <a href="{{ url_for('faculty_dashboard') }}" class="btn btn-primary">Back</a>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">Logout</a>
+        </div>
+
+        <h2>Review Applicant</h2>
+        
+        <!-- Basic Information Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Basic Information</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">Name:</span>
+                            <span class="info-text">{{ applicant.name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Student Number:</span>
+                            <span class="info-text">{{ applicant.uid }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">Semester and Year of Application:</span>
+                            <span class="info-text">{{ applicant.semester }} {{ applicant.year }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Applying for Degree:</span>
+                            <span class="info-text">{{ applicant.degree_sought }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GRE Scores Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>GRE Scores</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="info-item">
+                            <span class="info-label">Verbal:</span>
+                            <span class="info-text">{{ applicant.gre_verbal or 'N/A' }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-item">
+                            <span class="info-label">Quantitative:</span>
+                            <span class="info-text">{{ applicant.gre_quant or 'N/A' }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-item">
+                            <span class="info-label">Total:</span>
+                            <span class="info-text">{{ (applicant.gre_verbal|int + applicant.gre_quant|int) if applicant.gre_verbal and applicant.gre_quant else 'N/A' }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="info-item">
+                            <span class="info-label">Year Taken:</span>
+                            <span class="info-text">{{ applicant.gre_year or 'N/A' }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% if gre_subjects %}
+                <div class="mt-3">
+                    <h5>GRE Subject Scores</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>Score</th>
+                                    <th>Year Taken</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for subject in gre_subjects %}
+                                <tr>
+                                    <td>{{ subject.subject }}</td>
+                                    <td>{{ subject.score }}</td>
+                                    <td>{{ subject.year or 'N/A' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Prior Degrees Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Prior Degrees</h4>
+            </div>
+            <div class="card-body">
+                {% if prior_degrees %}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Degree</th>
+                                <th>GPA</th>
+                                <th>University</th>
+                                <th>Year</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for degree in prior_degrees %}
+                            <tr>
+                                <td>{{ degree.degree_type }}</td>
+                                <td>{{ degree.gpa }}</td>
+                                <td>{{ degree.university }}</td>
+                                <td>{{ degree.year }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p>No prior degrees found.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Additional Information Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Additional Information</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">Areas of Interest:</span>
+                            <span class="info-text">{{ applicant.areas_of_interest or 'N/A' }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <span class="info-label">Experience:</span>
+                            <span class="info-text">{{ applicant.work_experience or 'N/A' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendation Letters Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>Recommendation Letters</h4>
+            </div>
+            <div class="card-body">
+                {% if recommendation_letters %}
+                <div class="accordion" id="recommendationLettersAccordion">
+                    {% for letter in recommendation_letters %}
+                    <div class="accordion-item" data-reviewed="{% if letter.reviews|selectattr('reviewer_id', 'equalto', session.uid)|first %}true{% else %}false{% endif %}">
+                        <h2 class="accordion-header" id="heading{{ letter.id }}">
+                            <button class="accordion-button {% if not letter.is_submitted %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ letter.id }}" aria-expanded="{% if letter.is_submitted %}true{% else %}false{% endif %}" aria-controls="collapse{{ letter.id }}">
+                                <div class="d-flex justify-content-between w-100 me-3">
+                                    <div>
+                                        <strong>{{ letter.writer_name }}</strong>
+                                        {% if letter.writer_title and letter.institution_name %}
+                                        <span class="text-muted ms-2">({{ letter.writer_title }}, {{ letter.institution_name }})</span>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        {% if letter.is_submitted %}
+                                        <span class="badge bg-success">Submitted</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">Pending</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </button>
+                        </h2>
+                        <div id="collapse{{ letter.id }}" class="accordion-collapse collapse {% if letter.is_submitted %}show{% endif %}" aria-labelledby="heading{{ letter.id }}" data-bs-parent="#recommendationLettersAccordion">
+                            <div class="accordion-body">
+                                {% if letter.is_submitted %}
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="mb-4">
+                                            <h6>Letter Content</h6>
+                                            <div class="letter-content p-3 bg-light rounded">
+                                                {{ letter.letter_content | safe }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        {% if role in ['admin', 'reviewer', 'cac'] %}
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h6 class="mb-0">Review Letter</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                {% set existing_review = letter.reviews|selectattr('reviewer_id', 'equalto', session.uid)|first %}
+                                                {% if existing_review %}
+                                                <form method="POST" action="{{ url_for('review_letter', letter_id=letter.id) }}" id="reviewForm{{ letter.id }}">
+                                                    <div class="alert alert-info mb-3">
+                                                        <h6>Your Review</h6>
+                                                        <p class="text-muted small">Last updated: {{ existing_review.updated_at.strftime('%B %d, %Y') }}</p>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="rating{{ letter.id }}" class="form-label">Rating (1-5)</label>
+                                                        <select class="form-select" id="rating{{ letter.id }}" name="rating" required>
+                                                            <option value="">Select Rating</option>
+                                                            <option value="1" {% if existing_review.rating == 1 %}selected{% endif %}>1 - Poor</option>
+                                                            <option value="2" {% if existing_review.rating == 2 %}selected{% endif %}>2 - Fair</option>
+                                                            <option value="3" {% if existing_review.rating == 3 %}selected{% endif %}>3 - Good</option>
+                                                            <option value="4" {% if existing_review.rating == 4 %}selected{% endif %}>4 - Very Good</option>
+                                                            <option value="5" {% if existing_review.rating == 5 %}selected{% endif %}>5 - Excellent</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Is the letter generic?</label>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="is_generic" id="generic_yes{{ letter.id }}" value="Y" required {% if existing_review.is_generic == 'Y' %}checked{% endif %}>
+                                                            <label class="form-check-label" for="generic_yes{{ letter.id }}">Yes</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="is_generic" id="generic_no{{ letter.id }}" value="N" required {% if existing_review.is_generic == 'N' %}checked{% endif %}>
+                                                            <label class="form-check-label" for="generic_no{{ letter.id }}">No</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Is the writer credible?</label>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="is_credible" id="credible_yes{{ letter.id }}" value="Y" required {% if existing_review.is_credible == 'Y' %}checked{% endif %}>
+                                                            <label class="form-check-label" for="credible_yes{{ letter.id }}">Yes</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="is_credible" id="credible_no{{ letter.id }}" value="N" required {% if existing_review.is_credible == 'N' %}checked{% endif %}>
+                                                            <label class="form-check-label" for="credible_no{{ letter.id }}">No</label>
+                                                        </div>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-primary w-100">Update Review</button>
+                                                </form>
+                                                {% else %}
+                                                <form method="POST" action="{{ url_for('review_letter', letter_id=letter.id) }}" id="reviewForm{{ letter.id }}">
+                                                    <div class="mb-3">
+                                                        <label for="rating{{ letter.id }}" class="form-label">Rating (1-5)</label>
+                                                        <select class="form-select" id="rating{{ letter.id }}" name="rating" required>
+                                                            <option value="">Select Rating</option>
+                                                            <option value="1">1 - Poor</option>
+                                                            <option value="2">2 - Fair</option>
+                                                            <option value="3">3 - Good</option>
+                                                            <option value="4">4 - Very Good</option>
+                                                            <option value="5">5 - Excellent</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Is the letter generic?</label>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="is_generic" id="generic_yes{{ letter.id }}" value="Y" required>
+                                                            <label class="form-check-label" for="generic_yes{{ letter.id }}">Yes</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="is_generic" id="generic_no{{ letter.id }}" value="N" required>
+                                                            <label class="form-check-label" for="generic_no{{ letter.id }}">No</label>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Is the writer credible?</label>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="is_credible" id="credible_yes{{ letter.id }}" value="Y" required>
+                                                            <label class="form-check-label" for="credible_yes{{ letter.id }}">Yes</label>
+                                                        </div>
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="radio" name="is_credible" id="credible_no{{ letter.id }}" value="N" required>
+                                                            <label class="form-check-label" for="credible_no{{ letter.id }}">No</label>
+                                                        </div>
+                                                    </div>
+                                                </form>
+                                                {% endif %}
+
+                                                {% if letter.reviews|length > 0 and role in ['admin', 'gs', 'cac'] %}
+                                                <div class="mt-3">
+                                                    <h6>All Reviews</h6>
+                                                    <div class="list-group">
+                                                        {% for review in letter.reviews %}
+                                                        <div class="list-group-item">
+                                                            <div class="d-flex justify-content-between align-items-center">
+                                                                <strong>{{ review.reviewer.name }}</strong>
+                                                                <span class="badge bg-primary">{{ review.rating }}/5</span>
+                                                            </div>
+                                                            <div class="small text-muted">
+                                                                Generic: {{ 'Yes' if review.is_generic == 'Y' else 'No' }} | 
+                                                                Credible: {{ 'Yes' if review.is_credible == 'Y' else 'No' }}
+                                                            </div>
+                                                            <div class="small text-muted">
+                                                                Reviewed on: {{ review.created_at.strftime('%B %d, %Y') }}
+                                                                {% if review.updated_at != review.created_at %}
+                                                                <br>Last updated: {{ review.updated_at.strftime('%B %d, %Y') }}
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% else %}
+                                <p class="text-muted mb-2">Letter not submitted yet.</p>
+
+                                <!-- Toggle to mark letter as received by mail -->
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="receivedByMail{{ letter.id }}" onchange="toggleReviewForm('{{ letter.id }}')">
+                                    <label class="form-check-label" for="receivedByMail{{ letter.id }}">
+                                        Letter Received by Mail?
+                                    </label>
+                                </div>
+
+                                <!-- Review form (hidden unless toggled on) -->
+                                <div id="reviewFormContainer{{ letter.id }}" style="display: none;">
+                                    <form method="POST" action="{{ url_for('review_letter', letter_id=letter.id) }}" id="reviewForm{{ letter.id }}">
+                                        <input type="hidden" name="submit_by_mail" value="1">
+                                        <div class="mb-3">
+                                            <label for="rating{{ letter.id }}" class="form-label">Rating (1-5)</label>
+                                            <select class="form-select" id="rating{{ letter.id }}" name="rating" required>
+                                                <option value="">Select Rating</option>
+                                                <option value="1">1 - Poor</option>
+                                                <option value="2">2 - Fair</option>
+                                                <option value="3">3 - Good</option>
+                                                <option value="4">4 - Very Good</option>
+                                                <option value="5">5 - Excellent</option>
+                                            </select>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Is the letter generic?</label>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="is_generic" id="generic_yes{{ letter.id }}" value="Y" required>
+                                                <label class="form-check-label" for="generic_yes{{ letter.id }}">Yes</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="is_generic" id="generic_no{{ letter.id }}" value="N" required>
+                                                <label class="form-check-label" for="generic_no{{ letter.id }}">No</label>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Is the writer credible?</label>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="is_credible" id="credible_yes{{ letter.id }}" value="Y" required>
+                                                <label class="form-check-label" for="credible_yes{{ letter.id }}">Yes</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="is_credible" id="credible_no{{ letter.id }}" value="N" required>
+                                                <label class="form-check-label" for="credible_no{{ letter.id }}">No</label>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p>No recommendation letters found.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- GAS Review Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4>GAS Review</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('review_applicant', uid=applicant.uid) }}" id="reviewForm">
+                    <div class="mb-3">
+                        <label for="gas_rating" class="form-label">GAS Review Rating</label>
+                        <select class="form-select" id="gas_rating" name="gas_rating" required>
+                            <option value="">Select Rating</option>
+                            <option value="0">0 - Reject</option>
+                            <option value="1">1 - Borderline Admit</option>
+                            <option value="2">2 - Admit without Aid</option>
+                            <option value="3">3 - Admit with Aid</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="deficiency_courses" class="form-label">Deficiency Courses</label>
+                        <textarea class="form-control" id="deficiency_courses" name="deficiency_courses" rows="3"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Reasons for Reject</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="reject_reason" value="A" id="incomplete_record">
+                            <label class="form-check-label" for="incomplete_record">A - Incomplete Record</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="reject_reason" value="B" id="min_requirements">
+                            <label class="form-check-label" for="min_requirements">B - Does not meet minimum requirements</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="reject_reason" value="C" id="letter_problems">
+                            <label class="form-check-label" for="letter_problems">C - Problems with letters</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="reject_reason" value="D" id="not_competitive">
+                            <label class="form-check-label" for="not_competitive">D - Not competitive</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="reject_reason" value="E" id="other_reasons">
+                            <label class="form-check-label" for="other_reasons">E - Other reasons</label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="gas_comments" class="form-label">Reviewer Comments</label>
+                        <textarea class="form-control" id="gas_comments" name="gas_comments" rows="3" required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="recommended_advisor" class="form-label">Recommended Advisor</label>
+                        <select class="form-select" id="recommended_advisor" name="recommended_advisor" required>
+                            <option value="">Select Advisor</option>
+                            {% for advisor in advisors %}
+                            <option value="{{ advisor.uid }}">{{ advisor.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Submit Review</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const reviewForm = document.getElementById('reviewForm');
+            const recommendationLetters = document.querySelectorAll('.accordion-item');
+            
+            if (reviewForm) {
+                reviewForm.addEventListener('submit', function(event) {
+                    let allLettersRated = true;
+                    let unratedLetters = [];
+
+                    recommendationLetters.forEach(letter => {
+                        const isReviewed = letter.dataset.reviewed === 'true';
+                        if (!isReviewed) {
+                            const ratingSelect = letter.querySelector('select[name="rating"]');
+                            if (ratingSelect && !ratingSelect.value) {
+                                allLettersRated = false;
+                                const writerName = letter.querySelector('strong')?.textContent || 'Unknown';
+                                unratedLetters.push(writerName);
+                            }
+                        }
+                    });
+
+                    if (!allLettersRated) {
+                        event.preventDefault();
+                        alert('Please provide ratings for all recommendation letters before submitting the review:\n\n' + 
+                            unratedLetters.join('\n'));
+                    }
+                });
+
+            }
+    
+            // Add toggleReviewForm logic inside the same block
+            window.toggleReviewForm = function(letterId) {
+                const checkbox = document.getElementById('receivedByMail' + letterId);
+                const formContainer = document.getElementById('reviewFormContainer' + letterId);
+                if (checkbox && formContainer) {
+                    formContainer.style.display = checkbox.checked ? 'block' : 'none';
+                }
+            };
+        });
+    </script>
+    
+</body>
+</html>

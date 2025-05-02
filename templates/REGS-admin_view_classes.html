@@ -1,0 +1,78 @@
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>All Classes in System</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="/static/scripts.js" defer></script>
+</head>
+<body class="system-admin-page">
+
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="homeButton">
+      <button onclick="location.href='/home'">Home</button>
+    </div>
+    <button onclick="window.location.href='{{ request.referrer }}'" class="back-button">← Back</button>
+    <div class="dropdown">
+      <button onclick="toggleDropdown()">Account</button>
+      <div class="dropdown-content">
+        <a href="/editInfo">Edit Personal Info</a>
+        <a href="/logout">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="form-container">
+    <h1>All Classes in System</h1>
+
+    <form method="GET" action="{{ url_for('admin_view_classes') }}" class="search-form">
+      <input type="text" name="search" placeholder="Search Classes" value="{{ search_term if search_term }}">
+      <button type="submit" class="primary-button">Search</button>
+    </form>
+
+    {% if course_rosters %}
+      {% for roster in course_rosters %}
+        <div class="course-section" style="margin-top: 40px;">
+          <h2>{{ roster['course']['coursetitle'] }} (CRN: {{ roster['course']['crn'] }})</h2>
+          <p style="margin-bottom: 10px;">
+            <strong>Instructor:</strong> {{ roster['course']['instructor_name'] }} |
+            <strong>Semester:</strong> {{ roster['course']['semester'] }} |
+            <strong>Time:</strong> {{ roster['course']['day'] }} {{ roster['course']['time'] }}
+          </p>
+
+          {% if roster['students'] %}
+            <h3>Enrolled Students ({{ roster['students']|length }})</h3>
+            <table class="styled-table">
+              <thead>
+                <tr>
+                  <th>Student ID</th>
+                  <th>Name</th>
+                  <th>Program</th>
+                  <th>Grade</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for student in roster['students'] %}
+                <tr>
+                  <td>{{ student['uid'] }}</td>
+                  <td>{{ student['last_name'] }}, {{ student['first_name'] }}</td>
+                  <td>{{ student['program'] }}</td>
+                  <td>{{ student['grade'] if student['grade'] else 'IP' }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <p>No enrolled students.</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>No courses found.</p>
+    {% endif %}
+
+
+  </main>
+</body>
+</html>

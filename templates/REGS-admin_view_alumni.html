@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>View Alumni</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="/static/scripts.js" defer></script>
+</head>
+<body class="system-admin-page">
+
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="homeButton">
+      <button onclick="location.href='/home'">Home</button>
+    </div>
+    <button onclick="window.location.href='{{ request.referrer }}'" class="back-button">← Back</button>
+    <div class="dropdown">
+      <button onclick="toggleDropdown()">Account</button>
+      <div class="dropdown-content">
+        <a href="/editInfo">Edit Personal Info</a>
+        <a href="/logout">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="form-container">
+    <h1>Alumni Records</h1>
+
+
+    <form method="GET" action="{{ url_for('admin_view_alumni') }}" class="search-form">
+      <input type="text" name="search" placeholder="Search by name or ID" value="{{ search_term if search_term }}">
+      <button type="submit" class="primary-button">Search</button>
+    </form>
+
+    {% if alumni %}
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Username</th>
+            <th>Student Program</th>
+            <th>Edit User</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for alum in alumni %}
+          <tr>
+            <td>{{ alum.uid }}</td>
+            <td>{{ alum.last_name }}, {{ alum.first_name }}</td>
+            <td>{{ alum.email }}</td>
+            <td>{{ alum.username }}</td>
+            <td>
+              {% if alum.program %}
+                {{ alum.program }}
+              {% else %}
+                N/A
+              {% endif %}
+            </td>
+            <td><a href="{{ url_for('editUser', uid=alum.uid) }}" class="action-button edit">Edit</a>
+                <form action="{{ url_for('deleteUser', uid=alum.uid) }}" method="POST" onsubmit="return confirm('Delete user {{ alum.uid }}?');">
+                    <button type="submit" class="action-button delete">Delete</button>
+                  </form>
+                
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No alumni records found.</p>
+    {% endif %}
+  </main>
+</body>
+</html>

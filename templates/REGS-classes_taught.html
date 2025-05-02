@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Classes Taught</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="/static/scripts.js" defer></script>
+  <style>
+    .filter-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 1rem;
+    }
+    .filter-buttons a {
+      text-decoration: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      background-color: #555;
+      color: #fff;
+      transition: background-color 0.3s;
+    }
+    .filter-buttons a:hover {
+      background-color: #444;
+    }
+    .filter-buttons a.active {
+      background-color: #3498db;
+      color: #fff;
+    }
+  </style>
+</head>
+<body class="faculty-advisor-page">
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="homeButton">
+      <button onclick="location.href='/home'">Home</button>
+    </div>
+    <button onclick="window.location.href='{{ request.referrer }}'" class="back-button">
+      Back
+    </button>
+    <div class="dropdown">
+      <button onclick="toggleDropdown()">Account</button>
+      <div class="dropdown-content" id="accountMenu">
+        <a href="/editInfo">Edit Personal Info</a>
+        <a href="/logout">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="student-home-container">
+    <h1>Classes Taught</h1>
+
+    <!-- Semester picker -->
+    <form method="get" action="{{ url_for('classes_taught') }}" class="filter-buttons">
+      <a href="?semester=Spring 25" class="{% if selected_semester=='Spring 25' %}active{% endif %}">Spring 2025</a>
+      <a href="?semester=Fall 25" class="{% if selected_semester=='Fall 25' %}active{% endif %}">Fall 2025</a>
+    </form>
+
+    {% if course_rosters %}
+      {% for roster in course_rosters %}
+        <div class="menu-section">
+          <h3>{{ roster.course.course_title }} (CRN: {{ roster.course.crn }})</h3>
+          <p>
+            <strong>Semester:</strong> {{ roster.course.semester }}
+            &nbsp; <strong>Day:</strong> {{ roster.course.day }}
+            &nbsp; <strong>Time:</strong> {{ roster.course.time }}
+          </p>
+
+          {% if roster.students %}
+            <form method="POST" action="{{ url_for('submit_grade') }}">
+              <input type="hidden" name="course_id" value="{{ roster.course.crn }}">
+              <input type="hidden" name="semester" value="{{ roster.course.semester }}">
+
+              <table class="styled-table">
+                <thead>
+                  <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Program</th>
+                    <th>Current Grade</th>
+                    <th>New Grade</th>
+                    <th>Transcript</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for student in roster.students %}
+                  <tr>
+                    <td>{{ student.uid }}</td>
+                    <td>{{ student.last_name }}, {{ student.first_name }}</td>
+                    <td>{{ student.program }}</td>
+                    <td>{{ student.grade or 'IP' }}</td>
+                    <td>
+                      {% if student.grade and student.grade!='IP' %}
+                        Submitted
+                      {% else %}
+                        <select name="grade_{{ student.uid }}">
+                          <option value="">Select</option>
+                          <option>A</option><option>A-</option><option>B+</option>
+                          <option>B</option><option>B-</option><option>C+</option>
+                          <option>C</option><option>F</option>
+                        </select>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <a href="{{ url_for('view_student_transcript', student_id=student.uid, course_id=roster.course.crn, semester=roster.course.semester) }}">View Transcript</a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+
+              <div class="button-container" style="text-align:center; margin-top:1rem;">
+                <button type="submit" class="highlighted-button">Submit Grades</button>
+              </div>
+            </form>
+          {% else %}
+            <p>No students enrolled.</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>You are not teaching any courses this semester.</p>
+    {% endif %}
+
+    <div class="button-container" style="text-align:center; margin-top:1.5rem;">
+      <a href="/home"><button type="button" class="highlighted-button">Back to Portal</button></a>
+    </div>
+
+  </main>
+
+  <script>
+    function toggleDropdown() {
+      document.getElementById('accountMenu').classList.toggle('show');
+    }
+    window.addEventListener('click', (e) => {
+      if (!e.target.matches('.dropdown button')) {
+        const menu = document.getElementById('accountMenu');
+        if (menu.classList.contains('show')) menu.classList.remove('show');
+      }
+    });
+  </script>
+</body>
+</html>

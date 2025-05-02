@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Form</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <script src="/static/scripts.js" defer></script> 
+</head>
+<body>
+    <div class="navbar">
+        <div class="homeButton"> 
+            <button onclick="location.href='/home'">Home</button>
+        </div>
+        <button onclick="window.location.href='{{ request.referrer }}'" class="back-button">Back</button>
+        <div class="dropdown">
+            <button type="button" onclick="toggleDropdown()">Account</button>
+            <div class="dropdown-content">
+                <a href="/editInfo">Edit Personal Info</a>
+                <a href="/logout">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    {% if success %}
+    <div class="flash-message-success">
+        <p class="success-message">{{ success }}</p>
+    </div>
+    {% endif %}
+
+    <div class="form-container">
+        <h1>View Form</h1>
+        <h2> Student Name: {{ student['fname'] }} {{ student['lname'] }}</h2>
+        <h2>Program: {{ student['program'] }}</h2>
+        {% if user['user_type'] != 3 %}
+            <a href="/coursesnpreqs" class="primary-button">View Courses Offered</a>
+        {% endif %}
+
+        {% if user['user_type'] == 3 and student['form1_approved'] == 0 %}
+            <div class="button-container" style="display: flex; justify-content: space-between; margin-top: 20px;">
+                <form method="POST" action="{{ url_for('viewForm', Fuid=student.uid) }}">
+                    <button type="submit" name="status" value="approve" class="approve-button">Approve</button>
+                </form>
+                <form method="POST" action="{{ url_for('viewForm', Fuid=student.uid) }}">
+                    <button type="submit" name="status" value="reject" class="reject-button">Reject</button>
+                </form>
+            </div>
+        {% endif %}
+
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>❌/✅</th>
+                    <th>Dept</th>
+                    <th>Course Number</th>
+                    <th>Credits</th>
+                    <th>Course Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for course in courseSelect %}
+                    <tr>
+                        <td>
+                            {% if course['selected'] == 'True' %}
+                            ✅
+                            {% else %}
+                            ❌
+                            {% endif %}
+                        </td>
+                        <td>{{ course['dept'] }}</td>
+                        <td>{{ course['course_id'] }}</td>
+                        <td>{{ course['credits'] }}</td>
+                        <td>{{ course['course_name'] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>  
+    </div>
+</body>
+</html>

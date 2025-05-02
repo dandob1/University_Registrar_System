@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Add Graduate Student</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="/static/scripts.js" defer></script>
+  <style>
+    .card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      margin-top: 1rem;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-gap: 1.5rem;
+    }
+    .form-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    .form-footer {
+      text-align: center;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body class="system-admin-page">
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="homeButton">
+      <button onclick="location.href='/home'">Home</button>
+    </div>
+    <button onclick="window.location.href='{{ request.referrer }}'" class="back-button">← Back</button>
+    <div class="dropdown">
+      <button onclick="toggleDropdown()">Account</button>
+      <div class="dropdown-content">
+        <a href="/editInfo">Edit Personal Info</a>
+        <a href="/logout">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main class="student-home-container" style="max-width: 700px; margin: 2rem auto;">
+    <h1>DDM University</h1>
+    <h2>Add Graduate Student</h2>
+
+    {% if success %}
+      <div class="flash-message-success">{{ success }}</div>
+    {% endif %}
+    {% if error %}
+      <div class="flash-message-error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" class="card">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="uid">UID (8 digits)</label>
+          <input id="uid" type="number" name="uid" min="10000000" max="99999999" required>
+        </div>
+        <div class="form-group">
+          <label for="email">University Email</label>
+          <input id="email" type="email" name="email" placeholder="you@example.edu" required>
+        </div>
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input id="username" type="text" name="username" required>
+        </div>
+        <div class="form-group">
+          <label for="first_name">First Name</label>
+          <input id="first_name" type="text" name="first_name" required>
+        </div>
+        <div class="form-group">
+          <label for="last_name">Last Name</label>
+          <input id="last_name" type="text" name="last_name" required>
+        </div>
+        <div class="form-group">
+          <label for="address">Address</label>
+          <textarea id="address" name="address" rows="3" required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="program">Program</label>
+          <select id="program" name="program" required>
+            <option value="">Select Program</option>
+            <option value="MS in Computer Science">MS in Computer Science</option>
+            <option value="PhD in Computer Science">PhD in Computer Science</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="d_num">Department</label>
+          <select id="d_num" name="d_num" required>
+            <option value="">Select Department</option>
+            {% for dept in departments %}
+              <option value="{{ dept.d_num }}">{{ dept.d_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="advisor_uid">Advisor (optional)</label>
+          <select id="advisor_uid" name="advisor_uid">
+            <option value="">(none)</option>
+            {% for fac in faculty_list %}
+              <option value="{{ fac.uid }}">{{ fac.first_name }} {{ fac.last_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input id="password" type="password" name="password" required>
+        </div>
+        <div class="form-group">
+          <label for="confirm_password">Confirm Password</label>
+          <input id="confirm_password" type="password" name="confirm_password" required>
+        </div>
+      </div>
+
+      <div class="form-footer">
+        <button type="submit" class="highlighted-button">Register Student</button>
+      </div>
+    </form>
+  </main>
+</body>
+</html>

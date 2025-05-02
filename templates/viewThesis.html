@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Thesis</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <script src="/static/scripts.js" defer></script> 
+</head>
+<body>
+    <div class="navbar">
+        <div class="homeButton"> 
+            <button onclick="location.href='/home'">Home</button>
+        </div>
+        <button onclick="window.location.href='{{ request.referrer }}'" class="back-button">Back</button>
+        <div class="dropdown">
+            <button type="button" onclick="toggleDropdown()">Account</button>
+            <div class="dropdown-content">
+                <a href="/editInfo">Edit Personal Info</a>
+                <a href="/logout">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    {% if success %}
+    <div class="flash-message-success">
+        <p class="success-message">{{ success }}</p>
+    </div>
+    {% endif %}
+
+    <div class="form-container">
+        <h1>View Thesis</h1>
+        <h2> Student Name: {{ student['fname'] }} {{ student['lname'] }}</h2>
+        <h2>Program: {{ student['program'] }}</h2>
+
+        {% if user['user_type'] == 3 and student['thesis_approved'] == 0 %}
+            <div class="button-container">
+                <form method="POST" action="{{ url_for('viewThesis', Fuid=student.uid) }}">
+                    <span><button type="submit" name="action" value="approve" class="approve-button">Approve</button></span>
+                    <span><button type="submit" name="action" value="reject" class="reject-button">Reject</button></span>
+                </form>
+            </div>
+        {% endif %}
+
+        <h3>Thesis:</h3>
+        {% if thesis %}
+        <p>{{ thesis }}</p>
+        {% else %}
+        <p>No thesis submitted yet.</p>
+        {% endif %}
+
+        
+    </div>
+</body>
+</html>

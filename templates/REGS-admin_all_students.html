@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>All Students</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="/static/scripts.js" defer></script>
+  <style>
+    /* Card container */
+    .card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      margin-top: 1.5rem;
+    }
+    /* Search form */
+    .search-form {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .search-form input {
+      flex: 1;
+      padding: 0.75rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    .search-form button {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      background: #333;
+      color: #fff;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    /* Table styling */
+    .table-container {
+      overflow-x: auto;
+    }
+    .table-container table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    .table-container th,
+    .table-container td {
+      border: 1px solid #ddd;
+      padding: 0.75rem;
+      text-align: left;
+    }
+    .table-container th {
+      background: #f9f9f9;
+      font-weight: bold;
+    }
+    /* Action button */
+    .action-button {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: #333;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="system-admin-page">
+  <!-- Navbar -->
+  <div class="navbar">
+    <div class="homeButton">
+      <button onclick="location.href='/home'">Home</button>
+    </div>
+    <button onclick="window.location.href='{{ request.referrer }}'" class="back-button">← Back</button>
+    <div class="dropdown">
+      <button onclick="toggleDropdown()">Account</button>
+      <div class="dropdown-content">
+        <a href="/editInfo">Edit Personal Info</a>
+        <a href="/logout">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <main style="max-width: 800px; margin: 2rem auto;">
+    <h1>All Students</h1>
+
+    <div class="card">
+      <!-- Search form -->
+      <form method="GET" action="{{ url_for('admin_all_students') }}" class="search-form">
+        <input
+          type="text"
+          name="search"
+          placeholder="Search by name or ID"
+          value="{{ search_term or '' }}"
+        >
+        <button type="submit">Search</button>
+      </form>
+
+      {% if students %}
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Name</th>
+              <th>Program</th>
+              <th>Transcript</th>
+              <th>Edit User</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for student in students %}
+            <tr>
+              <td>{{ student.uid }}</td>
+              <td>{{ student.last_name }}, {{ student.first_name }}</td>
+              <td>{{ student.program }}</td>
+              <td>
+                <a
+                  href="{{ url_for('admin_view_transcript', student_id=student.uid) }}"
+                  class="action-button"
+                >View Transcript</a>
+              </td>
+              <td><a href="{{ url_for('editUser', uid=student.uid) }}" >Edit</a>
+                <form action="{{ url_for('deleteUser', uid=student.uid) }}" method="POST" onsubmit="return confirm('Delete user {{ student.uid }}?');">
+                    <button type="submit"  class="action-button delete">Delete</button>
+                  </form>
+              </td></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+        <p>No students found.</p>
+      {% endif %}
+    </div>
+  </main>
+</body>
+</html>

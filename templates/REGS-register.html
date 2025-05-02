@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Course Registration</title>
+  <!-- link to your existing stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  <script src="{{ url_for('static', filename='scripts.js') }}" defer></script>
+
+  <!-- new page-specific rules (you can also paste these into styles.css) -->
+  <style>
+    .semester-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .semester-tabs a {
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      background-color: #f4f4f4;
+      color: #2c3e50;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+    .semester-tabs a.active {
+      background-color: #3498db;
+      color: #fff;
+    }
+    .two-column-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 2rem;
+    }
+    .search-form {
+      margin-bottom: 1rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+    .prereq-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      font-size: 0.9rem;
+    }
+    .prereq-list li {
+      padding-left: 0.5rem;
+      text-indent: -0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <button class="back-button" onclick="window.location.href='{{ request.referrer }}'"> Back</button>
+    <div class="homeButton">
+      <button onclick="location.href='/home'">Home</button>
+    </div>
+    <div class="dropdown">
+      <button onclick="toggleDropdown()">Account</button>
+      <div class="dropdown-content">
+        <a href="/editInfo">Edit Personal Info</a>
+        <a href="/logout">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="student-home-container">
+    <h1>DDM University</h1>
+    <h2>Course Registration</h2>
+
+    <!-- semester switcher -->
+    <div class="semester-tabs">
+        <a href="{{ url_for('register_spring') }}"
+           class="{% if semester=='Spring 25' %}active{% endif %}">
+          Spring 25
+        </a>
+        <a href="{{ url_for('register_fall') }}"
+           class="{% if semester=='Fall 25' %}active{% endif %}">
+          Fall 25
+        </a>
+      </div>
+
+    {% if error %}
+      <div class="flash-message-error">{{ error }}</div>
+    {% endif %}
+    {% if success %}
+      <div class="flash-message-success">{{ success }}</div>
+    {% endif %}
+
+    <div class="two-column-grid">
+      <!-- available courses -->
+      <section>
+        <h3>Available Courses for {{ semester }}</h3>
+        <form method="get" action="{{ url_for('show_register_page') }}" class="search-form">
+          <input type="hidden" name="semester" value="{{ semester }}">
+          <input type="text" name="search" placeholder="Search by title or CRN…" value="{{ search_term or '' }}">
+          <button type="submit" class="primary-button">Search</button>
+        </form>
+
+        <table class="styled-table">
+          <thead>
+            <tr>
+              <th>CRN</th>
+              <th>Course</th>
+              <th>Cred.</th>
+              <th>When</th>
+              <th>Instructor</th>
+              <th>Cap.</th>
+              <th>Action</th>
+              <th>Prereqs</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for course in courses %}
+            <tr>
+              <td>{{ course.crn }}</td>
+              <td>{{ course.course_title }}</td>
+              <td>{{ course.credits }}</td>
+              <td>{{ course.day }} {{ course.time }}</td>
+              <td>{{ course.instructor }}</td>
+              <td>{{ course.current_enrollment }}/{{ course.max_enrollment }}</td>
+              <td>
+                <form method="post" action="{{ url_for('register_course') }}">
+                  <input type="hidden" name="course_id" value="{{ course.crn }}">
+                  <input type="hidden" name="semester" value="{{ semester }}">
+                  <button type="submit"
+                          class="primary-button"
+                          {% if course.current_enrollment >= course.max_enrollment %}disabled{% endif %}>
+                    {% if course.current_enrollment >= course.max_enrollment %}Full{% else %}Register{% endif %}
+                  </button>
+                </form>
+              </td>
+              <td>
+                  <ul class="prereq-list">
+                    {% for prereq in course.prereqs %}
+                      <li>• {{ prereq }}</li>
+                    {% else %}
+                      <li>• None</li>
+                    {% endfor %}
+                  </ul>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+      </section>
+
+      <!-- registered (IP) courses -->
+      <section>
+        <h3>Your Registered Courses</h3>
+        <table class="styled-table">
+          <thead>
+            <tr>
+              <th>CRN</th>
+              <th>Course</th>
+              <th>Cred.</th>
+              <th>When</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for course in registered_courses %}
+            <tr>
+              <td>{{ course.crn }}</td>
+              <td>{{ course.course_title }}</td>
+              <td>{{ course.credits }}</td>
+              <td>{{ course.day }} {{ course.time }}</td>
+              <td>
+                <form method="post" action="{{ url_for('drop_course') }}">
+                  <input type="hidden" name="course_id" value="{{ course.crn }}">
+                  <input type="hidden" name="semester"  value="{{ semester }}">
+                  <button type="submit" class="secondary-button">Drop</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <p class="total-credits"><strong>Total Credits:</strong> {{ total_credits }}</p>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    function toggleDropdown(){
+      document.querySelector('.dropdown-content')
+              .classList.toggle('show');
+    }
+  </script>
+</body>
+</html>

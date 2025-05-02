@@ -1,0 +1,101 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Student Transcript</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="/static/scripts.js" defer></script>
+</head>
+<body class="faculty-advisor-page">
+
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="homeButton">
+      <button onclick="location.href='/home'">Home</button>
+    </div>
+    <button onclick="window.location.href='{{ request.referrer }}'" class="back-button">
+      ← Back
+    </button>
+    <div class="dropdown">
+      <button onclick="toggleDropdown()">Account</button>
+      <div class="dropdown-content">
+        <a href="/editInfo">Edit Personal Info</a>
+        <a href="/logout">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="student-home-container">
+    <h1>Student Transcript</h1>
+
+    {% if error %}
+      <p class="flash-message-error">{{ error }}</p>
+    {% endif %}
+    {% if success %}
+      <p class="flash-message-success">{{ success }}</p>
+    {% endif %}
+
+    <div class="student-info">
+      <h3>{{ student.first_name }} {{ student.last_name }}</h3>
+      <p>
+        <strong>ID:</strong> {{ student.uid }}
+        &nbsp;|&nbsp;
+        <strong>Program:</strong> {{ student.program }}
+        {% if gpa is defined %}&nbsp;|&nbsp;<strong>GPA:</strong> {{ gpa }}{% endif %}
+      </p>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <p class="{{ category }}">{{ msg }}</p>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% if transcript %}
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th>CRN</th>
+            <th>Course Title</th>
+            <th>Credits</th>
+            <th>Semester</th>
+            <th>Current Grade</th>
+            <th>Update Grade</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in transcript %}
+          <tr>
+            <td>{{ row.crn }}</td>
+            <td>{{ row.course_title }}</td>
+            <td>{{ row.credits }}</td>
+            <td>{{ row.semester }}</td>
+            <td>{{ row.grade or 'IP' }}</td>
+            <td>
+              <form method="POST" action="{{ url_for('update_grade') }}" style="margin:0;">
+                <input type="hidden" name="student_id" value="{{ student.uid }}">
+                <input type="hidden" name="course_id"  value="{{ row.crn }}">
+                <input type="hidden" name="semester"   value="{{ row.semester }}">
+                <select name="new_grade" required>
+                  <option value="" disabled selected>Select</option>
+                  <option>A</option><option>A-</option>
+                  <option>B+</option><option>B</option><option>B-</option>
+                  <option>C+</option><option>C</option><option>F</option>
+                </select>
+                <button type="submit">Update</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No transcript records to display.</p>
+    {% endif %}
+
+  </main>
+
+</body>
+</html>

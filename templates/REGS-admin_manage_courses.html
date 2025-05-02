@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manage Courses</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="/static/scripts.js" defer></script>
+  <style>
+    /* Semester tabs styling */
+    .semester-tabs {
+      display: flex;
+      margin: 20px 0;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      background: #f8f9fa;
+    }
+    
+    .semester-tabs a {
+      flex: 1;
+      text-align: center;
+      padding: 12px 0;
+      text-decoration: none;
+      color: #495057;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      border-bottom: 3px solid transparent;
+    }
+    
+    .semester-tabs a:hover {
+      background: #e9ecef;
+      color: #212529;
+    }
+    
+    .semester-tabs a.active {
+      background: #fff;
+      color: #2c3e50;
+      border-bottom: 3px solid #3498db;
+      font-weight: 600;
+    }
+    
+    /* Make it responsive */
+    @media (max-width: 768px) {
+      .semester-tabs {
+        flex-direction: column;
+      }
+      
+      .semester-tabs a {
+        padding: 10px;
+      }
+    }
+    
+    /* Hide all semester tables by default */
+    .semester-table {
+      display: none;
+    }
+    
+    /* Show only the active semester table */
+    .semester-table.active {
+      display: block;
+    }
+  </style>
+</head>
+<body class="system-admin-page">
+
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="homeButton">
+      <button onclick="location.href='/home'">Home</button>
+    </div>
+    <button onclick="window.location.href='{{ request.referrer }}'" class="back-button">
+      ← Back
+    </button>
+    <div class="dropdown">
+      <button onclick="toggleDropdown()">Account</button>
+      <div class="dropdown-content">
+        <a href="/editInfo">Edit Personal Info</a>
+        <a href="/logout">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="form-container">
+    <h1>Manage Courses</h1>
+    
+    {% if success %}
+      <div class="flash-message-success">{{ success }}</div>
+    {% endif %}
+    {% if error %}
+      <div class="flash-message-error">{{ error }}</div>
+    {% endif %}
+
+    <h2>Add New Course</h2>
+    <form method="POST">
+      <label for="crn">CRN:</label>
+      <input type="text" id="crn" name="crn" required>
+
+      <label for="coursetitle">Course Title:</label>
+      <input type="text" id="coursetitle" name="coursetitle" required>
+
+      <h3>Please Enter Faculty and Classroom Information</h3>
+      <label for="d_num">Department:</label>
+      <select name="d_num" id="d_num" required>
+        <option value="">-- Select Department --</option>
+        <option value="1">CSCI</option>
+        <option value="2">ECE</option>
+        <option value="3">MATH</option>
+      </select>
+
+      <label for="credits">Credits:</label>
+      <input type="number" id="credits" name="credits" min="1" max="5" required>
+
+      <label for="instructor_id">Instructor:</label>
+      <select name="instructor_id" id="instructor_id" required>
+        <option value="">-- Select Instructor --</option>
+        {% for faculty in faculty_list %}
+          <option value="{{ faculty.uid }}">
+            {{ faculty.first_name }} {{ faculty.last_name }}
+          </option>
+        {% endfor %}
+      </select>
+
+      <label for="semester">Semester:</label>
+      <select name="semester" id="semester" required>
+        <option value="">-- Select Semester --</option>
+        <option value="Fall 25">Fall 2025</option>
+        <option value="Spring 25">Spring 2025</option>
+        <option value="Fall 26">Fall 2026</option>
+        <option value="Spring 26">Spring 2026</option>
+      </select>
+
+      <label for="day">Day:</label>
+      <select name="day" id="day" required>
+        <option value="">-- Select Day --</option>
+        <option value="M">Monday</option>
+        <option value="Tue">Tuesday</option>
+        <option value="W">Wednesday</option>
+        <option value="Thr">Thursday</option>
+        <option value="F">Friday</option>
+      </select>
+
+      <label for="time">Time:</label>
+      <input type="text" id="time" name="time" placeholder="e.g., 1000-1115" required>
+
+      <label for="roomnum">Room Number:</label>
+      <input type="text" id="roomnum" name="roomnum" required>
+
+      <label for="maxenrollment">Max Enrollment:</label>
+      <input type="number" id="maxenrollment" name="maxenrollment" min="1" required>
+
+      <button type="submit" class="primary-button">Add Course</button>
+    </form>
+
+    <h2>Current Courses</h2>
+    <div class="semester-tabs">
+      <a href="#" class="semester-tab active" data-semester="all">All Semesters</a>
+      <a href="#" class="semester-tab" data-semester="Fall 25">Fall 2025</a>
+      <a href="#" class="semester-tab" data-semester="Spring 25">Spring 2025</a>
+      <a href="#" class="semester-tab" data-semester="Fall 26">Fall 2026</a>
+      <a href="#" class="semester-tab" data-semester="Spring 26">Spring 2026</a>
+    </div>
+
+    <div class="table-container">
+      <table class="styled-table semester-table active" id="all-semesters">
+        <thead>
+          <tr>
+            <th>CRN</th>
+            <th>Course Title</th>
+            <th>Department</th>
+            <th>Credits</th>
+            <th>Day</th>
+            <th>Time</th>
+            <th>Room</th>
+            <th>Instructor</th>
+            <th>Semester</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for course in courses %}
+          <tr class="course-row" data-semester="{{ course.semester }}">
+            <td>{{ course.crn }}</td>
+            <td>{{ course.course_title }}</td>
+            <td>{{ course.d_name }}</td>
+            <td>{{ course.credits }}</td>
+            <td>{{ course.day }}</td>
+            <td>{{ course.time }}</td>
+            <td>{{ course.room_num }}</td>
+            <td>{{ course.first_name }} {{ course.last_name }}</td>
+            <td>{{ course.semester }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% for semester in ['Fall 25', 'Spring 25', 'Fall 26', 'Spring 26'] %}
+      <table class="styled-table semester-table" id="{{ semester|replace(' ', '-') }}">
+        <thead>
+          <tr>
+            <th>CRN</th>
+            <th>Course Title</th>
+            <th>Department</th>
+            <th>Credits</th>
+            <th>Day</th>
+            <th>Time</th>
+            <th>Room</th>
+            <th>Instructor</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for course in courses if course.semester == semester %}
+          <tr>
+            <td>{{ course.crn }}</td>
+            <td>{{ course.course_title }}</td>
+            <td>{{ course.d_name }}</td>
+            <td>{{ course.credits }}</td>
+            <td>{{ course.day }}</td>
+            <td>{{ course.time }}</td>
+            <td>{{ course.room_num }}</td>
+            <td>{{ course.first_name }} {{ course.last_name }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endfor %}
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const tabs = document.querySelectorAll('.semester-tab');
+      
+      tabs.forEach(tab => {
+        tab.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          // Remove active class from all tabs and tables
+          document.querySelectorAll('.semester-tab').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.semester-table').forEach(t => t.classList.remove('active'));
+          
+          // Add active class to clicked tab
+          this.classList.add('active');
+          
+          // Show the corresponding table
+          const semester = this.getAttribute('data-semester');
+          if (semester === 'all') {
+            document.getElementById('all-semesters').classList.add('active');
+          } else {
+            document.getElementById(semester.replace(' ', '-')).classList.add('active');
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

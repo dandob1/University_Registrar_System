@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { color: #333; text-align: center; }
+        ul { list-style: none; padding: 0; }
+        li { margin: 10px 0; }
+        a { color: #333; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .menu-section { border: 1px solid #ddd; padding: 15px; margin: 20px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Zymies University</h1>
+    <h2>Welcome, {{ first_name }} {{ last_name }}</h2>
+    
+    {% if success %}<p class="success">{{ success }}</p>{% endif %}
+    
+    <div class="menu-section">
+        <h3>Student Menu</h3>
+        <ul>
+            <li><a href="{{url_for('course_schedule')}}">Course Schedule</a></li>
+            <li> <a href="/register_page">Register for Courses</a></li>
+            <li> <a href="{{ url_for('view_transcript') }}">View Transcript</a></li>
+        </ul>
+    </div>
+    
+    <div class="menu-section">
+        <h3>Account Settings</h3>
+        <a href="/change_name">Change Name</a> | 
+        <a href="/change_email">Change Email</a> | 
+        <a href="/change_address">Change Address</a>
+    </div>
+    
+    <p style="text-align: center;"><a href="{{ url_for('logout') }}">Logout</a></p>
+</body>
+</html>

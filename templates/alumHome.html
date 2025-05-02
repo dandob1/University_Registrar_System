@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alumni Home</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <script src="/static/scripts.js" defer></script> 
+
+    <div class="navbar">
+        <div class = "homeButton"> 
+            <button onclick="location.href='/home'">Home</button>
+        </div>
+        <button onclick="window.location.href='{{ request.referrer }}'" class="back-button">Back</button>
+        <div class="dropdown">
+            <button type="button" onclick="toggleDropdown()">Account</button>
+            <div class="dropdown-content">
+                <a href="/editInfo">Edit Personal Info</a>
+                <a href="/logout">Logout</a>
+            </div>
+        </div>
+    </div>
+
+</head>
+<body>
+    <main class="student-home-container" style="text-align: center;">
+
+
+    <h1>Alumni Home</h1>
+
+    
+    <h2>Welcome {{ students.fname }} {{ students.lname }} Class of {{ students.semYear }}</h2>
+
+    <h3>Congrats on graduating with a GPA of: {{ cumulativeGPA }}!</h3>
+
+    <h3>Edit Personal Information:</h3>
+    <section class="button-container" style="margin: 30px 0;"></section>
+    <a href="/editInfo"> 
+        <button type = "button" class="primary-button">Personal Info</button>
+    </a>
+
+    <h3>View your transcipt:</h3>
+
+    <a href="/transcript/{{ students.uid }}">
+        <button type="button" class="primary-button">View Transcript</button>
+    </a>
+</section>
+
+    <div style="text-align: center;">
+        <img src="https://media1.tenor.com/m/yq5AFfnm_AsAAAAd/puff-dragon.gif" alt="Puff Dragon Crypto Solana Vibe" style="max-width: 100%; height: auto;">
+      </div>
+      </main>
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+<html>
+<head>
+    <title>Alumni Portal</title>
+    <style>
+        body { font-family: Arial; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { color: #333; text-align: center; }
+        ul { list-style: none; padding: 0; }
+        li { margin: 10px 0; }
+        a { color: #333; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .menu-section { border: 1px solid #ddd; padding: 15px; margin: 20px 0; border-radius: 5px; }
+        button { padding: 5px 10px; margin: 5px 0; }
+    </style>
+</head>
+<body>
+    <h1>Zymies University</h1>
+    <h2>Alumni Portal</h2>
+    <p>Logged in as: {{ session.username }} | <a href="{{ url_for('logout') }}">Logout</a></p>
+    <div class="menu-section">
+        <h3>Actions</h3>
+        <ul>
+            <li> <a href="{{url_for('view_transcript')}}">View Your Transcript</a></li>
+        </ul>
+    </div>
+
+    {% if success %}<p class="success">{{ success }}</p>{% endif %}
+    
+    <div class="menu-section">
+        <h3>Account Settings</h3>
+        <form action="{{ url_for('change_name') }}" method="GET" style="display: inline;">
+            <button type="submit">Change Name</button>
+        </form>
+        <form action="{{ url_for('change_email') }}" method="GET" style="display: inline;">
+            <button type="submit">Change Email</button>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applicant Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+        font-family: 'Poppins', sans-serif;
+        background-color: #f0f4f8;
+        color: #2c3e50;
+        }
+        .navbar {
+        background-color: #1f3f5b;
+        padding: 10px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        }
+        .navbar a {
+        color: #ffffff;
+        margin-right: 15px;
+        text-decoration: none;
+        font-weight: 600;
+        }
+        .navbar a:hover {
+        color: #f8d57e;
+        }
+        .dashboard-container {
+        background: #fff;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+        }
+        .btn-primary {
+        background-color: #4da8da;
+        border-color: #4da8da;
+        }
+        .btn-primary:hover {
+        background-color: #1f3f5b;
+        border-color: #1f3f5b;
+        }
+        .btn-outline-danger:hover {
+        background-color: #dc3545;
+        color: #fff;
+        }
+        h2 {
+        color: #fff;
+        padding-top: 2%;
+        }
+        h5 {
+        color: #1f3f5b;
+        }
+    </style>
+    </head>
+    <body>
+    <div class="container">
+        <div class="navbar d-flex justify-content-between align-items-center">
+        <a href="{{ url_for('home') }}">Home</a>
+        <h2 class="text-center mb-4">Welcome, {{ applicant.name }}!</h2>
+        <a href="{{ url_for('logout') }}">Logout</a>
+        </div>
+
+        
+        <p class="text-center text-muted">UID: {{ applicant.uid }}</p>
+
+        <div class="dashboard-container">
+            <!-- Status and Semester Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Application Status</h5>
+                    <p class="card-text"><strong>Status:</strong> 
+                        <span class="badge {% if applicant.status == 'incomplete' %}bg-secondary{% elif applicant.status == 'under review' %}bg-warning{% elif applicant.status == 'admitted' %}bg-success{% else %}bg-danger{% endif %}">
+                            {{ applicant.status|title }}
+                        </span>
+                    </p>
+                    <p class="card-text"><strong>Semester:</strong> {{ applicant.semester }}</p>
+                </div>
+                {% if applicant.status == 'admitted' %}
+                    {% if not applicant.payment_method %}
+                        <a href="{{ url_for('submit_payment') }}" class="btn btn-primary mt-3">Submit Payment</a>
+                    {% elif applicant.payment_method and not applicant.payment_submitted %}
+                        <div class="alert alert-warning mt-3">
+                            Waiting for your payment to be submitted.
+                        </div>
+                    {% elif applicant.payment_submitted %}
+                        <div class="alert alert-success mt-3">
+                            Payment Submitted! Thank you.
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+            
+            <!-- Transcript Section -->
+            <div class="transcript-box">
+                <h5>Transcript Status</h5>
+                {% if applicant.transcript_received %}
+                    <div class="alert alert-success mb-0">
+                        <strong>Your transcript has been received and is being processed.</strong>
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning mb-3">
+                        <strong>Your transcript has not been received yet.</strong>
+                    </div>
+                    <p>Please mail your official transcript to:</p>
+                    <address class="ms-3">
+                        <strong>Computer Science Graduate Admissions</strong><br>
+                        123 University Avenue<br>
+                        Boston, MA 02115
+                    </address>
+                {% endif %}
+            </div>
+            
+            <!-- Recommendation Letters Section -->
+            <div class="transcript-box">
+                <h5>Recommendation Letters</h5>
+                
+                <!-- Display existing recommendation letters -->
+                {% if recommendation_letters|length > 0 %}
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Writer Name</th>
+                                    <th>Email</th>
+                                    <th>Status</th>
+                                    <th>Requested Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for letter in recommendation_letters %}
+                                    <tr>
+                                        <td>{{ letter.writer_name }}</td>
+                                        <td>{{ letter.writer_email }}</td>
+                                        <td>
+                                            {% if letter.is_submitted %}
+                                                <span class="badge bg-success">Submitted</span>
+                                            {% else %}
+                                                <span class="badge bg-warning">Pending</span>
+                                                <div class="mt-2">
+                                                    <small class="text-muted">Share this link with your letter writer:</small>
+                                                    <div class="input-group input-group-sm">
+                                                        <input type="text" class="form-control" value="{{ url_for('submit_letter', letter_id=letter.id, _external=True) }}" readonly>
+                                                        <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard(this)">Copy</button>
+                                                    </div>
+                                                </div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if letter.submission_date %}
+                                                {{ letter.submission_date[:10] }}
+                                            {% else %}
+                                                N/A
+                                            {% endif %}
+                                        </td>
+                                        
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info mb-4">
+                        <strong>You haven't requested any recommendation letters yet.</strong>
+                    </div>
+                {% endif %}
+                
+                <!-- Form to request a new recommendation letter -->
+                <button class="btn btn-primary mb-3" type="button" data-bs-toggle="collapse" 
+                        data-bs-target="#newRecommendationForm" aria-expanded="false">
+                    Request New Recommendation Letter
+                </button>
+                
+                <div class="collapse" id="newRecommendationForm">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title mb-3">New Recommendation Letter Request</h6>
+                            <form action="{{ url_for('request_recommendation') }}" method="POST">
+                                <div class="mb-3">
+                                    <label for="writer_name" class="form-label">Writer's Full Name</label>
+                                    <input type="text" class="form-control" id="writer_name" name="writer_name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="writer_email" class="form-label">Writer's Email</label>
+                                    <input type="email" class="form-control" id="writer_email" name="writer_email" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="writer_title" class="form-label">Writer's Title</label>
+                                    <input type="text" class="form-control" id="writer_title" name="writer_title" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="institution_name" class="form-label">Institution Name</label>
+                                    <input type="text" class="form-control" id="institution_name" name="institution_name" required>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="requested_by_mail" name="requested_by_mail">
+                                            <label class="form-check-label" for="requested_by_mail">
+                                                Requested by Mail?
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>                                
+                                <button type="submit" class="btn btn-success">Send Request</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Collapsible Application Details Section -->
+            <div class="details-section">
+                <button class="btn btn-primary w-100 mb-3" type="button" data-bs-toggle="collapse" 
+                        data-bs-target="#applicationDetails" aria-expanded="false" aria-controls="applicationDetails">
+                    View Application Details
+                </button>
+                
+                <div class="collapse" id="applicationDetails">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title mb-4">Personal Information</h5>
+                            <div class="row mb-3">
+                                <div class="col-md-4">Name:</div>
+                                <div class="col-md-8">{{ applicant.name }}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4">SSN:</div>
+                                <div class="col-md-8">{{ applicant.ssn }}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4">Address:</div>
+                                <div class="col-md-8">{{ applicant.address }}</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-4">Degree Sought:</div>
+                                <div class="col-md-8">{{ applicant.degree_sought }}</div>
+                            </div>
+                            
+                            <h5 class="card-title mt-4 mb-4">Academic Information</h5>
+                            {% if applicant.gre_verbal or applicant.gre_quant %}
+                                <h6 class="mb-3"><strong>GRE Scores</strong></h6>
+                                <div class="row mb-3">
+                                    <div class="col-md-4">GRE Verbal:</div>
+                                    <div class="col-md-8">{{ applicant.gre_verbal }}</div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-4">GRE Quantitative:</div>
+                                    <div class="col-md-8">{{ applicant.gre_quant }}</div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-4">GRE Year:</div>
+                                    <div class="col-md-8">{{ applicant.gre_year }}</div>
+                                </div>
+                            {% endif %}
+                            
+                            {% if applicant.gre_subjects|length > 0 %}
+                                <h6 class="mb-3 mt-4"><strong>GRE Subject Tests</strong></h6>
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Subject</th>
+                                            <th>Score</th>
+                                            <th>Year</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for subject in applicant.gre_subjects %}
+                                            <tr>
+                                                <td>{{ subject.subject }}</td>
+                                                <td>{{ subject.score }}</td>
+                                                <td>{{ subject.year }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% endif %}
+                            
+                            {% if applicant.prior_degrees|length > 0 %}
+                                <h6 class="mb-3 mt-4"><strong>Prior Degrees</strong></h6>
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>Degree</th>
+                                            <th>University</th>
+                                            <th>Year</th>
+                                            <th>GPA</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for degree in applicant.prior_degrees %}
+                                            <tr>
+                                                <td>{{ degree.degree_type }}</td>
+                                                <td>{{ degree.university }}</td>
+                                                <td>{{ degree.year }}</td>
+                                                <td>{{ degree.gpa }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% endif %}
+                            
+                            {% if applicant.work_experience %}
+                                <h6 class="mb-3 mt-4"><strong>Work Experience</strong></h6>
+                                <p>{{ applicant.work_experience }}</p>
+                            {% endif %}
+                            
+                            {% if applicant.areas_of_interest %}
+                                <h6 class="mb-3 mt-4"><strong>Areas of Interest</strong></h6>
+                                <p>{{ applicant.areas_of_interest }}</p>
+                            {% endif %}
+                            
+                            <div class="row mt-4">
+                                <div class="col-md-4"><strong>Last Updated:</strong></div>
+                                <div class="col-md-8">
+                                    {% if applicant.updated_at %}
+                                        {{ applicant.updated_at[:10] }}
+                                    {% else %}
+                                        N/A
+                                    {% endif %}
+                                </div>
+                                
+                            </div>
+
+                            <div class="row mt-4"><a href="{{ url_for('edit_info') }}">Edit Personal Info</a></div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    function copyToClipboard(button) {
+        const input = button.previousElementSibling;
+        input.select();
+        document.execCommand('copy');
+        button.textContent = 'Copied!';
+        setTimeout(() => {
+            button.textContent = 'Copy';
+        }, 2000);
+    }
+    </script>
+</body>
+</html> 

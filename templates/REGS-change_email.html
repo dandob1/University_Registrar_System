@@ -1,0 +1,28 @@
+<html>
+<head>
+    <title>Change Email</title>
+    <style>
+        body { font-family: Arial; max-width: 600px; margin: 0 auto; padding: 20px; }
+        h1 { color: #333; text-align: center; }
+        form { border: 1px solid #ddd; padding: 20px; border-radius: 5px; }
+        input { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
+        button { background: #333; color: white; padding: 10px; border: none; width: 100%; }
+        .note { font-size: 0.9em; color: #666; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Zymies University</h1>
+    <h2>Change Your Email</h2>
+    
+    {% if error %}
+    <p class="error">{{ error }}</p>
+    {% endif %}
+    
+    <form method="POST">
+        <p class="note">Email must have an @example.edu domain</p>
+        <input type="email" name="new_email" placeholder="Enter new email" required>
+        <button type="submit">Save Changes</button>
+    </form>
+</body>
+</html>

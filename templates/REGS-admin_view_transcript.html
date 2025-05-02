@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Transcript</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="/static/scripts.js" defer></script>
+</head>
+<body class="system-admin-page">
+
+  <!-- NAVBAR -->
+  <div class="navbar">
+    <div class="homeButton">
+      <button onclick="location.href='/home'">Home</button>
+    </div>
+    <button onclick="window.location.href='{{ request.referrer }}'" class="back-button">
+      ← Back
+    </button>
+    <div class="dropdown">
+      <button onclick="toggleDropdown()">Account</button>
+      <div class="dropdown-content">
+        <a href="/editInfo">Edit Personal Info</a>
+        <a href="/logout">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="form-container">
+    <h1>DDM University</h1>
+    <h2>Student Transcript</h2>
+
+    <a href="{{ url_for('admin_all_students') }}" class="secondary-button">← Back to Student List</a>
+
+    {% if error %}
+      <div class="flash-message-error">{{ error }}</div>
+    {% endif %}
+    {% if success %}
+      <div class="flash-message-success">{{ success }}</div>
+    {% endif %}
+
+    <div class="student-info" style="margin-bottom: 1rem;">
+      <h3>{{ student['first_name'] }} {{ student['last_name'] }}</h3>
+      <p><strong>ID:</strong> {{ student['uid'] }} | <strong>Program:</strong> {{ student['program'] }}</p>
+    </div>
+
+    <table class="styled-table">
+      <thead>
+        <tr>
+          <th>CRN</th>
+          <th>Course Title</th>
+          <th>Credits</th>
+          <th>Semester</th>
+          <th>Current Grade</th>
+          <th>Update Grade</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in transcript %}
+        <tr>
+          <td>{{ row['crn'] }}</td>
+          <td>{{ row['coursetitle'] }}</td>
+          <td>{{ row['credits'] }}</td>
+          <td>{{ row['semester'] }}</td>
+          <td>{{ row['grade'] if row['grade'] else 'IP' }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('update_grade') }}" style="margin: 0;">
+              <input type="hidden" name="student_id" value="{{ student['uid'] }}">
+              <input type="hidden" name="course_id" value="{{ row['crn'] }}">
+              <input type="hidden" name="semester" value="{{ row['semester'] }}">
+              <select name="new_grade" class="styled-dropdown">
+                <option value="">Select Grade</option>
+                <option value="A">A</option>
+                <option value="A-">A-</option>
+                <option value="B+">B+</option>
+                <option value="B">B</option>
+                <option value="B-">B-</option>
+                <option value="C+">C+</option>
+                <option value="C">C</option>
+                <option value="F">F</option>
+              </select>
+              <button type="submit" class="primary-button" style="margin-top: 0.5rem;">Update</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </main>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Graduation Applications</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="/static/scripts.js" defer></script>
+</head>
+<body class="grad-secretary-page">
+  <!-- NAVBAR (copy from gsHome.html) -->
+  <div class="navbar">
+    <div class="homeButton">
+      <button onclick="location.href='/home'">Home</button>
+    </div>
+    <button onclick="window.location.href='{{ request.referrer }}'" class="back-button">
+      ← Back
+    </button>
+    <div class="dropdown">
+      <button onclick="toggleDropdown()">Account</button>
+      <div class="dropdown-content">
+        <a href="/editInfo">Edit Personal Info</a>
+        <a href="/logout">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <main class="student-home-container">
+    <h1>Graduation Applications</h1>
+
+    <form method="get" action="{{ url_for('search_graduating_students') }}" class="search-form">
+        <input
+          type="text"
+          name="query"
+          placeholder="Search by name or UID…"
+          value="{{ request.args.get('query','') }}"
+        >
+        <button type="submit">🔍 Search</button>
+      </form>
+
+    {% if students %}
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th>UID</th>
+            <th>Name</th>
+            <th>Program</th>
+            <th>GPA</th>
+            <th>Advisor</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in students %}
+          <tr>
+            <td>{{ s['uid'] }}</td>
+            <td>{{ s['fname'] }} {{ s['lname'] }}</td>
+            <td>{{ s['program'] }}</td>
+            <td>{{ s['gpa'] }}</td>
+            <td>{{ assignedAdvisor.get(s['advisor_uid'], 'Not Assigned') }}</td>
+            <td>
+              <form action="{{ url_for('processGraduation', uid=s['uid']) }}" method="post" style="display:inline">
+                <button type="submit" class="highlighted-button">Process Graduation</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>No graduation applications found.</p>
+    {% endif %}
+
+    </a>
+  </main>
+</body>
+</html>

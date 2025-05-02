@@ -1,0 +1,193 @@
+<!-- Professional Graduate Secretary Dashboard UI with Working Advisor Modal -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Graduate Secretary Home</title>
+  <!-- Google Font + Font Awesome -->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-p+U6b8..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="/static/css/styles.css">
+  <script src="/static/scripts.js" defer></script>
+</head>
+<body class="grad-secretary-page">
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <button onclick="window.history.back()" class="nav-btn">
+      <i class="fas fa-arrow-left"></i> Back
+    </button>
+    <div class="home-btn">
+      <button onclick="location.href='/home'">
+        <i class="fas fa-home"></i> Home
+      </button>
+    </div>
+    <div class="dropdown">
+      <button onclick="toggleDropdown()" class="nav-btn">
+        <i class="fas fa-user-circle"></i> Account <i class="fas fa-caret-down"></i>
+      </button>
+      <div class="dropdown-content">
+        <a href="/editInfo"><i class="fas fa-user-edit"></i> Edit Personal Info</a>
+        <a href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="dashboard">
+    <header class="dashboard-header">
+      <h1>Graduate Secretary Home</h1>
+    </header>
+
+    <!-- ACTION BUTTONS -->
+    <section class="actions-grid">
+      <a href="{{ url_for('all_students') }}" class="action-card">
+        <i class="fas fa-graduation-cap"></i>
+        <span>Manage Grades</span>
+      </a>
+      <a href="{{ url_for('gs_course_schedule') }}" class="action-card">
+        <i class="fas fa-calendar-alt"></i>
+        <span>View Schedule</span>
+      </a>
+      <a href="{{ url_for('search_graduating_students') }}" class="action-card">
+        <i class="fas fa-file-signature"></i>
+        <span>Graduation Applications</span>
+      </a>
+      <a href="{{ url_for('faculty_dashboard') }}" class="action-card">
+        <i class="fas fa-file-alt"></i>
+        <span>View Applications</span>
+      </a>
+      <a href="{{ url_for('gsAlumniList') }}" class="action-card">
+        <i class="fas fa-user-friends"></i>
+        <span>Lookup Alumni</span>
+      </a>
+    </section>
+
+    <!-- FLASH MESSAGES -->
+    {% if success or error %}
+      {% if success %}
+        <div class="flash-message-success"><p>{{ success }}</p></div>
+      {% endif %}
+      {% if error %}
+        <div class="flash-message-error"><p>{{ error }}</p></div>
+      {% endif %}
+      <script>
+        setTimeout(() => window.location.href = "/home", 1500);
+      </script>
+    {% endif %}
+
+    <!-- FILTER & SEARCH -->
+    <div class="filter-search-container">
+      <form method="get" action="{{ url_for('home') }}" class="filter-form">
+        <label>Degree:
+          <input type="text" name="program" placeholder="e.g. MS in Computer Science"
+                 value="{{ program }}">
+        </label>
+        <label>Admit Year:
+          <input type="text" name="admit_year" placeholder="YYYY"
+                 value="{{ year }}">
+        </label>
+        <label>Search (UID or Name):
+          <input type="text" name="query" placeholder="e.g. 12345678 or Marcell"
+                 value="{{ query or '' }}">
+        </label>
+        <button type="submit">Apply</button>
+        {% if program or year or query %}
+          <a href="{{ url_for('home') }}" class="clear-filter">Clear</a>
+        {% endif %}
+      </form>
+    </div>
+
+    <!-- STUDENT TABLE -->
+    <div class="table-container">
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th>UID</th>
+            <th>Name</th>
+            <th>Program</th>
+            <th>GPA</th>
+            <th>Advisor</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="studentList">
+          {% for student in students %}
+          <tr>
+            <td>{{ student.uid }}</td>
+            <td>{{ student.fname }} {{ student.lname }}</td>
+            <td>{{ student.program }}</td>
+            <td>{{ student.gpa }}</td>
+            <td>
+              {% if student.advisor_uid %}
+                {{ assignedAdvisor[student.advisor_uid] }}
+              {% else %}
+                Not Assigned
+              {% endif %}
+            </td>
+            <td class="actions-cell">
+              <button onclick="openModal('{{ student.uid }}')" class="action-btn">
+                <i class="fas fa-user-tag"></i>
+                Change Advisor
+              </button>
+            
+              {% if student.grad_requested %}
+                <form action="{{ url_for('processGraduation', uid=student.uid) }}"
+                      method="post" style="display:inline">
+                  <button type="submit" class="action-btn">
+                    <i class="fas fa-check-circle"></i>
+                    Approve Graduation
+                  </button>
+                </form>
+              {% endif %}
+            
+              <a href="{{ url_for('transcript', uid=student.uid) }}" style="text-decoration:none">
+                <button class="action-btn">
+                  <i class="fas fa-file-alt"></i>
+                  View Transcript
+                </button>
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- Assign/Change Advisor Modal -->
+  <div id="advisorModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h2>Assign/Change Advisor</h2>
+      <input type="text" id="advisorSearch" placeholder="Search advisors…">
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th>UID</th>
+            <th>Name</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="advisorList">
+          {% for advisor in advisors %}
+          <tr>
+            <td>{{ advisor.uid }}</td>
+            <td>{{ advisor.fname }} {{ advisor.lname }}</td>
+            <td>
+              <button onclick="assignAdvisor(window.currentStudentUid, '{{ advisor.uid }}')">
+                <i class="fas fa-user-check"></i> Assign
+              </button>
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="3">No advisors available.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</body>
+</html>

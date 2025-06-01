@@ -1,5 +1,5 @@
 ## My Program
-**University_Registrar_System** Developed a full-stack academic management system simulating a university registrar. Enabled end-to-end functionality including applicant acceptance, course registration, grade assignment, and graduation processing.
+**University_Registrar_System** is a full-stack academic management system simulating a university registrar. Enabling end-to-end functionality including applicant acceptance, course registration, grade assignment, and graduation processing.
 
 ## Important
 Upon running the program make sure to press the reset database button on the login page before trying to login to ensure the database is updated upon opening the program.
@@ -48,7 +48,7 @@ Upon running the program make sure to press the reset database button on the log
   - Follow instructions on the submit payment button.
   - Login as user "33445566" and password "pass" as a grad secretary
   - Navigate to view applications and matriculate the student you created. Also assign them an advisor from the homepage table's "assign advisor" button.
-  - Login as the user you created and submit their advising form for classes they plan to take. Make sure to adhere to all prerequisites and requires courses.
+  - Login as the user you created and submit their advising form for classes they plan to take. Make sure to adhere to all prerequisites and required courses.
   - Approve the advising form from the users faculty advisor page
   - Register for the classes selected in the form from the student homepage
   - Sign in as the grad secretary and provide grades for all of the courses selected. Make sure the GPA is above 3.0 for MS students and above 3.4 for PhD students.

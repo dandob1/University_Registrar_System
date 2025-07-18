@@ -1,5 +1,5 @@
 ## My Program
-**University_Registrar_System** is a full-stack academic management system simulating a university registrar. Enabling end-to-end functionality including applicant acceptance, course registration, grade assignment, and graduation processing.
+**University_Registrar_System** is a full-stack academic management system simulating a university registrar. Enabling end-to-end functionality including applicant acceptance, course registration, grade assignment, and graduation processing. A dynamic chatbot is ready for assistance to answer any university related questions users may have.
 
 ## Important
 Upon running the program make sure to press the reset database button on the login page before trying to login to ensure the database is updated upon opening the program.
@@ -8,8 +8,10 @@ Upon running the program make sure to press the reset database button on the log
  - Backend: Python (Flask), SQLite
  - Frontend: HTML, CSS, JavaScript
  - Database: SQL (SQLite)
+ - Chatbot: Azure OpenAI integration
 
 ## Features:
+- Chatbot: A dynamic assistant who answers simple questions to clarify information necessary.
 - Applicants: Apply to the university, submit personal information, receive admission decisions.
 - Course Registration: Enroll in courses after acceptance.
 - Grade System: Faculty can assign grades; students can view transcripts.
@@ -38,6 +40,14 @@ Upon running the program make sure to press the reset database button on the log
     Use the following command:
    
         python main.py
+
+## How to use the chatbot
+  - Simply sign in as any user and click the pop up button in the bottom right corner of the screen.
+  - Speak to your new AI agent.
+      - If signed in as a user try asking: "What is my name?" or "Who is my advisor?" or "What is my role?"
+      - If signed in as an advisor try asking: "What is my name?" or "Who are my advisees?" or "What classes do I teach this semester?"
+      - If signed in as a admin try asking: "Who am I?" or "What is my role?" or "What do I do?"
+      - etc.
 
 ## How to use the program for full application to graduation
   - Create a new user with the apply to university feature.

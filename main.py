@@ -3973,13 +3973,6 @@ def chat():
         
         user_uid = session['uid']
         
-        from test_final import (
-            run_query,
-            validate_sql_query,
-            requires_codebase_knowledge, 
-            is_schema_inquiry
-        )
-        
         # check for schema inquiry
         if is_schema_inquiry(user_input):
             return jsonify({
@@ -4265,6 +4258,133 @@ def chat():
     except Exception as e:
         print(f"Chat error: {e}")
         return jsonify({'error': 'I encountered an error. Please try again.'}), 500
+    
+
+def validate_sql_query(sql_query: str, user_id: str):
+    #make sure oyu only acces current user
+    #make everything lowercase
+    sql_lower = sql_query.lower()
+    
+    #check if its using other people
+    if "users" in sql_lower:
+        # only looking up faculty is allowed
+        if (f"uid = '{user_id}'" not in sql_query 
+            and f"uid='{user_id}'" not in sql_query 
+            and "advisor_uid" not in sql_query 
+            and "instructor_uid" not in sql_query 
+            and "is_advisor" not in sql_query 
+            and "is_instructor" not in sql_query 
+            and "is_reviewer" not in sql_query 
+            and "is_cac" not in sql_query):
+            return False, "Access denied: You can only view your own user information."
+    
+    if "grad_student" in sql_lower:
+        # only for current user
+        if (f"uid = '{user_id}'" not in sql_query
+            and f"uid='{user_id}'" not in sql_query):
+            return False, "Access denied: You can only view your own student information."
+    
+    if "transcript" in sql_lower:
+        # only for current user
+        if (f"student_uid = '{user_id}'" not in sql_query 
+            and f"student_uid='{user_id}'" not in sql_query):
+            return False, "Access denied: You can only view your own transcript information."
+    
+    if "faculty" in sql_lower:
+        # Allow if filtering by current user OR if it's for advisor/faculty lookup
+        if (f"uid = '{user_id}'" not in sql_query 
+            and f"uid='{user_id}'" not in sql_query 
+            and "advisor_uid" not in sql_query 
+            and "instructor_uid" not in sql_query):
+            return False, "Access denied: You can only view your own faculty information."
+    
+    # bad queries to protect against
+    dangerous_patterns = [
+        "select * from users",
+        "select uid from users", 
+        "select email from users",
+        "select username from users",
+        "select first_name from users",
+        "select last_name from users",
+        "select address from users",
+    ]
+    
+    for pattern in dangerous_patterns:
+        if (pattern in sql_lower 
+            and f"uid = '{user_id}'" not in sql_query 
+            and f"uid='{user_id}'" not in sql_query 
+            and "advisor_uid" not in sql_query 
+            and "instructor_uid" not in sql_query 
+            and "is_advisor" not in sql_query and "is_instructor" not in sql_query):
+            return False, "Access denied: You can only access your own personal information."
+    
+    return True, "Query validated"
+
+def run_query(sql_query: str, user_id: str):
+    #run the query
+    try:
+        # Validate query first
+        is_valid, message = validate_sql_query(sql_query, user_id)
+        if not is_valid:
+            return [("NO BOY, ACCESS_DENIED", message)]
+        
+        conn = sqlite3.connect("phase-2.db")
+        cursor = conn.cursor()
+        cursor.execute(sql_query)
+        rows = cursor.fetchall()
+        conn.close()
+        return rows
+    except Exception as e:
+        print(f"Database error: {e}")
+        return [("ERROR", f"Database error: {e}")]
+
+def requires_codebase_knowledge(user_input: str) -> bool:
+    """Determine if the query requires access to graduation requirements/business logic"""
+    keywords = [
+        'graduation', 'graduate', 'requirements', 'requirement', 'credits needed',
+        'courses needed', 'what do i need', 'how many credits', 'prerequisites',
+        'degree requirements', 'academic requirements', 'program requirements',
+        'still need', 'remaining', 'left to graduate', 'completion',
+        'academic standing', 'gpa requirement', 'minimum gpa', 'course sequence',
+        'advising', 'advisor', 'academic plan', 'degree plan', 'progress',
+        'have i met', 'met the requirements', 'ready to graduate', 'can i graduate',
+        'graduation status', 'degree status', 'what requirements', 'next steps'
+    ]
+    
+    for keyword in keywords:
+        if keyword in user_input:
+            return True
+    return False
+
+def is_schema_inquiry(user_input: str) -> bool:
+    """Check if user is asking about database schema or technical details"""
+    schema_keywords = [
+        'schema', 'table', 'tables', 'database structure', 'columns', 'fields',
+        'database design', 'show tables', 'describe table', 'table structure',
+        'what tables', 'database schema', 'table names', 'column names',
+        'database information', 'system structure', 'data structure'
+    ]
+    
+    lower = user_input.lower()
+    
+    # only find personal information
+    personal = [
+        'what is my uid', 'my uid', 'what is my id', 'my id', 
+        'what is my student id', 'my student id', 'show me my uid',
+        'tell me my uid', 'give me my uid'
+    ]
+    
+    # dont block personal
+    for pattern in personal:
+        if pattern in lower:
+            return False
+    
+    # check for keywrods
+    for keyword in schema_keywords:
+        if keyword in lower:
+            return True
+        
+    return False
 
 
 

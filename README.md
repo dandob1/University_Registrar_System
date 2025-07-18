@@ -44,7 +44,7 @@ Upon running the program make sure to press the reset database button on the log
 ## How to use the chatbot
   - Simply sign in as any user and click the pop up button in the bottom right corner of the screen.
   - Speak to your new AI agent.
-      - If signed in as a user try asking: "What is my name?" or "Who is my advisor?" or "What is my role?"
+      - If signed in as a user try asking: "What is my gpa?" or "Who is my advisor?" or "What classes have I taken?"
       - If signed in as an advisor try asking: "What is my name?" or "Who are my advisees?" or "What classes do I teach this semester?"
       - If signed in as a admin try asking: "Who am I?" or "What is my role?" or "What do I do?"
       - etc.

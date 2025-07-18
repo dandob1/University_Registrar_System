@@ -3973,7 +3973,6 @@ def chat():
         
         user_uid = session['uid']
         
-        # Import the chatbot functions from other file
         from test_final import (
             run_query,
             validate_sql_query,
@@ -4008,111 +4007,123 @@ def chat():
             return jsonify({
                 'response': "I can only provide information about your own records. I cannot access or share information about other users."
             })
-                
+        
+        #start convo history
+        if 'conversation_history' not in session:
+            session['conversation_history'] = []
+        
+        conversation_history = session.get('conversation_history', [])
+        
+        #initialize system
+        if not conversation_history or len(conversation_history) == 0:
+            #db schema for reference
+            schema_info = """
+            DATABASE SCHEMA:
+            
+            users (uid CHAR(8), email, username, password, user_type, first_name, last_name, address)
+            department (d_num INTEGER, d_name VARCHAR(50))
+            faculty (uid CHAR(8), d_num INTEGER, is_advisor, is_instructor, is_reviewer, is_cac)
+            grad_student (uid CHAR(8), advisor_uid CHAR(8), d_num INTEGER, program, credit_hours, gpa, is_suspended, has_advising_hold)
+            courses (crn INTEGER, course_title VARCHAR(100), d_num INTEGER, credits INTEGER, description TEXT)
+            schedule (id INTEGER, crn INTEGER, section_num INTEGER, semester VARCHAR(20), time VARCHAR(50), day VARCHAR(20), room_num VARCHAR(50), max_enrollment INTEGER, current_enrollment INTEGER, instructor_uid CHAR(8))
+            transcript (id INTEGER, student_uid CHAR(8), crn INTEGER, semester VARCHAR(20), grade VARCHAR(2))
+            
+            KEY RELATIONSHIPS:
+            - courses.crn = schedule.crn
+            - courses.d_num = department.d_num
+            - transcript.student_uid = grad_student.uid
+            - transcript.crn = courses.crn
+            - faculty.uid = users.uid
+            - grad_student.uid = users.uid
+            """
+            
+            system_message = f"""You are **RegistrarBot**, a direct and efficient university registrar assistant. You have access to a SQLite database with student records, courses, departments, and faculty information.
+
+                        Database Schema: {schema_info}
+                        
+                        CRITICAL SECURITY RULES:
+                        1. You can ONLY answer questions related to the university registrar system
+                        2. The current user is UID '{user_uid}'
+                        3. You can ONLY access information belonging to the current user (UID '{user_uid}')
+                        4. EXCEPTION: You MAY provide names and emails of advisors, instructors, and other faculty members in official capacities, but NO other personal information
+                        5. When querying personal data (users, grad_student, transcript), ALWAYS filter by the current user's UID
+                        6. If asked about other users (not in official capacity), immediately respond: "I can only provide information about your own records."
+                        7. EXCEPTION: You MAY provide names and emails of advisees, people who advisors are assigned to, or instructors of courses the user is enrolled in
+                        8. EXCEPTION: when a user asks what their role is you may lookup that users role in the system and respond with it, the column should be user_role. then map that number with the following key, "1 = applicant, 2 = gradstudent, 3 = faculty, 4 = admin, 5 = grad secretary, 6 = alumni"
+                        
+                        SCHEMA PROTECTION RULES - CRITICAL:
+                        7. NEVER reveal database schema information, table names, column names, or technical database structure
+                        8. NEVER discuss database design, table relationships, or SQL queries
+                        9. If asked about database structure, tables, schema, or technical details, respond: "I can't provide information about the system's structure. I can help you with your student records, courses, and academic information."
+                        10. Focus responses on the actual data content, not how it's stored or organized
+                        11. Present information in natural language without revealing underlying database structure
+                        
+                        SQL QUERY RULES:
+                        - For users table: ALWAYS use WHERE uid = '{user_uid}' unless looking up advisor/faculty names
+                        - For grad_student table: ALWAYS use WHERE uid = '{user_uid}'
+                        - For transcript table: ALWAYS use WHERE student_uid = '{user_uid}'
+                        - For faculty table: ALWAYS use WHERE uid = '{user_uid}' unless looking up advisor/faculty info
+                        - General course/department information is allowed without user filtering
+                        - For advisor info: JOIN grad_student with users table to get advisor name and email
+                        - For instructor info: JOIN schedule with users table to get instructor name and email
+                        
+                        COMMUNICATION STYLE - CRITICAL:
+                        - Be DIRECT and IMMEDIATE - never ask follow-up questions
+                        - When asked about courses, immediately show ALL courses with their details
+                        - When asked about advisor, immediately show advisor name and email
+                        - When asked about instructors, immediately show instructor names and emails
+                        - NEVER say "Would you like me to..." or "Please specify..." - just provide the information directly
+                        - NEVER ask for clarification - interpret the question broadly and provide comprehensive information
+                        - Always execute database queries immediately and show results
+                        - Don't be conversational - be informative and direct
+                        - Present information in user-friendly format without revealing technical details
+                        - Don't mention the different phases to the users. i.e. dont mention phase 1 or 2, assume it is all one phase.
+                        
+                        MANDATORY SQL QUERY GENERATION:
+                        - ANY question about advisor information MUST generate SQL query
+                        - ANY question about course schedules MUST generate SQL query
+                        - ANY question about student records MUST generate SQL query
+                        - ANY question about faculty information MUST generate SQL query
+                        - NEVER provide information without querying the database first
+                        - If you don't have database results, you MUST generate a SQL query
+                        - NEVER make up or guess information - always query the database
+                        
+                        SPECIFIC QUERY HANDLING:
+                        - "what classes are offered" = immediately show ALL courses with title, department, and credits
+                        - "who is my advisor" = MUST generate SQL: SELECT u.first_name, u.last_name, u.email FROM grad_student g JOIN users u ON g.advisor_uid = u.uid WHERE g.uid = '{user_uid}'
+                        - "who teaches X course" = immediately show instructor name and email
+                        - "what is my uid" or "what is my id" = respond with the user's UID: {user_uid}
+                        - "what is my email" = query database for user's email address
+                        - "what is my name" = query database for user's name
+                        - Always provide complete information in a single response
+                        - NEVER respond without querying database for dynamic information (except for UID which is known)
+                        
+                        GRADUATION REQUIREMENTS & BUSINESS LOGIC:
+                        - When answering questions about graduation requirements, degree progress, or academic advising, you have access to the university's business logic and requirements through Azure Search
+                        - Use this information to provide accurate guidance about what the student needs to complete their degree
+                        - Always combine database information about the student with the business rules to give personalized advice
+                        
+                        When you need database information, provide ONLY the SQL query wrapped in ```sql``` tags
+                        After receiving SQL results, give a natural, conversational answer with all the requested information
+                        Never show SQL queries to users in your final responses
+                        Never reveal database structure, table names, or technical implementation details
+                        If asked about unrelated topics, respond: "I'm sorry, I can only answer questions related to the university registrar system."
+                        
+                        IMPORTANT: Always prioritize user privacy and data security. Only access other users' names/emails when they are in official academic capacities (advisor, instructor, etc.). Never reveal system architecture or database design.
+                        """
+            
+            conversation_history = [
+                {"role": "system", "content": system_message}
+            ]
+        
+        #ad d the user input to conversation history
+        conversation_history.append({"role": "user", "content": user_input})
+        
         client = AzureOpenAI(
             azure_endpoint="https://aisdevelopment.openai.azure.com/",
             api_key="DTyQG79lV7tPjYYFAB9sGzYe8MkQSrdLsosDYlUEIqAjNQ9NDtZZJQQJ99BFACYeBjFXJ3w3AAABACOGBm6d",
             api_version="2024-12-01-preview",
         )
-        
-        #db schema for refrence
-        schema_info = """
-        DATABASE SCHEMA:
-        
-        users (uid CHAR(8), email, username, password, user_type, first_name, last_name, address)
-        department (d_num INTEGER, d_name VARCHAR(50))
-        faculty (uid CHAR(8), d_num INTEGER, is_advisor, is_instructor, is_reviewer, is_cac)
-        grad_student (uid CHAR(8), advisor_uid CHAR(8), d_num INTEGER, program, credit_hours, gpa, is_suspended, has_advising_hold)
-        courses (crn INTEGER, course_title VARCHAR(100), d_num INTEGER, credits INTEGER, description TEXT)
-        schedule (id INTEGER, crn INTEGER, section_num INTEGER, semester VARCHAR(20), time VARCHAR(50), day VARCHAR(20), room_num VARCHAR(50), max_enrollment INTEGER, current_enrollment INTEGER, instructor_uid CHAR(8))
-        transcript (id INTEGER, student_uid CHAR(8), crn INTEGER, semester VARCHAR(20), grade VARCHAR(2))
-        
-        KEY RELATIONSHIPS:
-        - courses.crn = schedule.crn
-        - courses.d_num = department.d_num
-        - transcript.student_uid = grad_student.uid
-        - transcript.crn = courses.crn
-        - faculty.uid = users.uid
-        - grad_student.uid = users.uid
-        """
-        
-        system_message = f"""You are **RegistrarBot**, a direct and efficient university registrar assistant. You have access to a SQLite database with student records, courses, departments, and faculty information.
-
-                    Database Schema: {schema_info}
-                    
-                    CRITICAL SECURITY RULES:
-                    1. You can ONLY answer questions related to the university registrar system
-                    2. The current user is UID '{user_uid}' (Paul McCartney)
-                    3. You can ONLY access information belonging to the current user (UID '{user_uid}')
-                    4. EXCEPTION: You MAY provide names and emails of advisors, instructors, and other faculty members in official capacities, but NO other personal information
-                    5. When querying personal data (users, grad_student, transcript), ALWAYS filter by the current user's UID
-                    6. If asked about other users (not in official capacity), immediately respond: "I can only provide information about your own records."
-                    
-                    SCHEMA PROTECTION RULES - CRITICAL:
-                    7. NEVER reveal database schema information, table names, column names, or technical database structure
-                    8. NEVER discuss database design, table relationships, or SQL queries
-                    9. If asked about database structure, tables, schema, or technical details, respond: "I can't provide information about the system's technical structure. I can help you with your student records, courses, and academic information."
-                    10. Focus responses on the actual data content, not how it's stored or organized
-                    11. Present information in natural language without revealing underlying database structure
-                    
-                    SQL QUERY RULES:
-                    - For users table: ALWAYS use WHERE uid = '{user_uid}' unless looking up advisor/faculty names
-                    - For grad_student table: ALWAYS use WHERE uid = '{user_uid}'
-                    - For transcript table: ALWAYS use WHERE student_uid = '{user_uid}'
-                    - For faculty table: ALWAYS use WHERE uid = '{user_uid}' unless looking up advisor/faculty info
-                    - General course/department information is allowed without user filtering
-                    - For advisor info: JOIN grad_student with users table to get advisor name and email
-                    - For instructor info: JOIN schedule with users table to get instructor name and email
-                    
-                    COMMUNICATION STYLE - CRITICAL:
-                    - Be DIRECT and IMMEDIATE - never ask follow-up questions
-                    - When asked about courses, immediately show ALL courses with their details
-                    - When asked about advisor, immediately show advisor name and email
-                    - When asked about instructors, immediately show instructor names and emails
-                    - NEVER say "Would you like me to..." or "Please specify..." - just provide the information directly
-                    - NEVER ask for clarification - interpret the question broadly and provide comprehensive information
-                    - Always execute database queries immediately and show results
-                    - Don't be conversational - be informative and direct
-                    - Present information in user-friendly format without revealing technical details
-                    - Don't mention the different phases to the users. i.e. dont mention phase 1 or 2, assume it is all one phase.
-                    
-                    MANDATORY SQL QUERY GENERATION:
-                    - ANY question about advisor information MUST generate SQL query
-                    - ANY question about course schedules MUST generate SQL query
-                    - ANY question about student records MUST generate SQL query
-                    - ANY question about faculty information MUST generate SQL query
-                    - NEVER provide information without querying the database first
-                    - If you don't have database results, you MUST generate a SQL query
-                    - NEVER make up or guess information - always query the database
-                    
-                    SPECIFIC QUERY HANDLING:
-                    - "what classes are offered" = immediately show ALL courses with title, department, and credits
-                    - "who is my advisor" = MUST generate SQL: SELECT u.first_name, u.last_name, u.email FROM grad_student g JOIN users u ON g.advisor_uid = u.uid WHERE g.uid = '{user_uid}'
-                    - "who teaches X course" = immediately show instructor name and email
-                    - "what is my uid" or "what is my id" = respond with the user's UID: {user_uid}
-                    - "what is my email" = query database for user's email address
-                    - "what is my name" = query database for user's name
-                    - Always provide complete information in a single response
-                    - NEVER respond without querying database for dynamic information (except for UID which is known)
-                    
-                    GRADUATION REQUIREMENTS & BUSINESS LOGIC:
-                    - When answering questions about graduation requirements, degree progress, or academic advising, you have access to the university's business logic and requirements through Azure Search
-                    - Use this information to provide accurate guidance about what the student needs to complete their degree
-                    - Always combine database information about the student with the business rules to give personalized advice
-                    
-                    When you need database information, provide ONLY the SQL query wrapped in ```sql``` tags
-                    After receiving SQL results, give a natural, conversational answer with all the requested information
-                    Never show SQL queries to users in your final responses
-                    Never reveal database structure, table names, or technical implementation details
-                    If asked about unrelated topics, respond: "I'm sorry, I can only answer questions related to the university registrar system."
-                    
-                    IMPORTANT: Always prioritize user privacy and data security. Only access other users' names/emails when they are in official academic capacities (advisor, instructor, etc.). Never reveal system architecture or database design.
-                    """
-        
-        conversation_history = [
-            {"role": "system", "content": system_message},
-            {"role": "user", "content": user_input}
-        ]
         
         #check if we need azure search
         use_azure_search = requires_codebase_knowledge(user_input)
@@ -4152,63 +4163,82 @@ def chat():
         if sql_match:
             sql_query = sql_match.group(1).strip()
             
-            #run query
-            rows = run_query(sql_query, user_uid)
-            
-            #check for access denied
-            if rows and len(rows) > 0 and len(rows[0]) > 0 and rows[0][0] == "ACCESS_DENIED":
-                return jsonify({
-                    'response': "I can only provide information about your own records. I cannot access or share information about other users."
-                })
-            
-            #add results to conversation
-            if rows and rows[0][0] != "ERROR":
-                sql_results_message = f"SQL Query Results ({len(rows)} rows):\n"
-                for i, row in enumerate(rows, 1):
-                    sql_results_message += f"{i}: {row}\n"
-            else:
-                sql_results_message = "SQL Query Results: No results found."
-            
-            conversation_history.append({"role": "system", "content": sql_results_message})
-            
-            #get response
-            interpretation_prompt = "Based on the SQL results above, provide a clear, direct answer to the user's question. Present the information in a well-formatted, easy-to-read manner. Do not mention SQL, database operations, table names, or any technical implementation details. If showing courses, format them as a clean list. If showing advisor information, include their name and email clearly. IMPORTANT: Do not repeat information - provide a single, concise response. Focus on the actual information content, not how it's stored or retrieved."
-            
-            if use_azure_search:
-                interpretation_prompt += " Use the graduation requirements and business logic information to provide comprehensive academic guidance."
-            
-            conversation_history.append({"role": "user", "content": interpretation_prompt})
-            
-            if use_azure_search:
-                answer = client.chat.completions.create(
-                    model="gpt-4.1-mini",
-                    messages=conversation_history,
-                    extra_body=extra_body
-                )
-            else:
-                answer = client.chat.completions.create(
-                    model="gpt-4.1-mini",
-                    messages=conversation_history
-                )
-            
-            final_response = answer.choices[0].message.content
-            
-            #remove duplicate lines
-            lines = final_response.split('\n')
-            cleaned_lines = []
-            seen_lines = set()
-            
-            for line in lines:
-                line = line.strip()
-                if line and line not in seen_lines:
-                    cleaned_lines.append(line)
-                    seen_lines.add(line)
-            
-            final_response = '\n'.join(cleaned_lines)
-            
-            return jsonify({'response': final_response})
+            try:
+                #run query
+                rows = run_query(sql_query, user_uid)
+                
+                #check for access denied
+                if rows and len(rows) > 0 and rows[0][0] == "ACCESS_DENIED":
+                    error_message = "I can only provide information about your own records. I cannot access or share information about other users."
+                    return jsonify({'response': error_message})
+                
+                #add results to conversation
+                if rows and rows[0][0] != "ERROR":
+                    sql_results_message = f"SQL Query Results ({len(rows)} rows):\n"
+                    for i, row in enumerate(rows, 1):
+                        sql_results_message += f"{i}: {row}\n"
+                else:
+                    sql_results_message = "SQL Query Results: No results found."
+                
+                conversation_history.append({"role": "system", "content": sql_results_message})
+                
+                #get interpretation - same as working version
+                interpretation_prompt = "Based on the SQL results above, provide a clear, direct answer to the user's question. Present the information in a well-formatted, easy-to-read manner. Do not mention SQL, database operations, table names, or any technical implementation details. If showing courses, format them as a clean list. If showing advisor information, include their name and email clearly. IMPORTANT: Do not repeat information - provide a single, concise response. Focus on the actual information content, not how it's stored or retrieved."
+                
+                if use_azure_search:
+                    interpretation_prompt += " Use the graduation requirements and business logic information to provide comprehensive academic guidance. Avoid repeating the same information multiple times."
+                
+                conversation_history.append({"role": "user", "content": interpretation_prompt})
+                
+                #get final response
+                if use_azure_search:
+                    answer = client.chat.completions.create(
+                        model="gpt-4.1-mini",
+                        messages=conversation_history,
+                        extra_body=extra_body
+                    )
+                else:
+                    answer = client.chat.completions.create(
+                        model="gpt-4.1-mini",
+                        messages=conversation_history
+                    )
+                
+                final_response = answer.choices[0].message.content
+                
+                #remove duplicate lines like in working version
+                lines = final_response.split('\n')
+                cleaned_lines = []
+                seen_lines = set()
+                
+                for line in lines:
+                    line = line.strip()
+                    if line and line not in seen_lines:
+                        cleaned_lines.append(line)
+                        seen_lines.add(line)
+                
+                final_response = '\n'.join(cleaned_lines)
+                
+                #sdd response to conversation history
+                conversation_history.append({"role": "assistant", "content": final_response})
+                
+                # Remove the temporary interpretation messages (last 2 messages before assistant response)
+                conversation_history = conversation_history[:-2]
+                
+                # Store updated conversation history in session (limit to last 10 exchanges to prevent session bloat)
+                if len(conversation_history) > 21:  # system + 10 user/assistant pairs
+                    conversation_history = conversation_history[:1] + conversation_history[-20:]
+                
+                session['conversation_history'] = conversation_history
+                
+                return jsonify({'response': final_response})
+                
+            except Exception as e:
+                error_message = f"I'm sorry, I encountered an error while retrieving your information. Please try again."
+                conversation_history.append({"role": "assistant", "content": error_message})
+                session['conversation_history'] = conversation_history
+                return jsonify({'response': error_message})
         else:
-            #no SQL query return direct response
+            #no SQL query, return direct response
             lines = result.split('\n')
             cleaned_lines = []
             seen_lines = set()
@@ -4220,12 +4250,21 @@ def chat():
                     seen_lines.add(line)
             
             response = '\n'.join(cleaned_lines)
+            
+            # Add assistant response to conversation history
+            conversation_history.append({"role": "assistant", "content": response})
+            
+            # Store updated conversation history in session (limit to last 10 exchanges)
+            if len(conversation_history) > 21:
+                conversation_history = conversation_history[:1] + conversation_history[-20:]
+            
+            session['conversation_history'] = conversation_history
+            
             return jsonify({'response': response})
         
     except Exception as e:
         print(f"Chat error: {e}")
         return jsonify({'error': 'I encountered an error. Please try again.'}), 500
-
 
 
 

@@ -16,6 +16,7 @@
     <a href="{{ url_for('logout') }}" >Logout</a>
     <h1>Zymies University</h1>
     <h2>Transcript</h2>
+    {% include "chatbot.html" %}
     
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
     {% if success %}<p class="success">{{ success }}</p>{% endif %}

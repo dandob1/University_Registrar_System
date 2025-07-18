@@ -48,6 +48,7 @@ Upon running the program make sure to press the reset database button on the log
       - If signed in as an advisor try asking: "What is my name?" or "Who are my advisees?" or "What classes do I teach this semester?"
       - If signed in as a admin try asking: "Who am I?" or "What is my role?" or "What do I do?"
       - etc.
+      - Help: if the bot does not answer a question on the first pass try rephrasing the question or prompting it again.
 
 ## How to use the program for full application to graduation
   - Create a new user with the apply to university feature.
